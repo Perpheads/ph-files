@@ -9,6 +9,8 @@ import data.ChangePasswordRequest
 import data.LoginRequest
 import data.LoginResponse
 import io.ktor.locations.*
+import io.ktor.locations.post
+import io.ktor.locations.get
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -91,7 +93,7 @@ fun Route.accountRoutes(
                 return@post
             } else if (request.newPassword.length > 50) {
                 call.respondText("Password cannot be longer than 50 characters", status = HttpStatusCode.BadRequest)
-            } else if (BCrypt.checkpw(request.existingPassword, call.user().password)) {
+            } else if (!BCrypt.checkpw(request.existingPassword, call.user().password)) {
                 call.respondText("Password incorrect", status = HttpStatusCode.BadRequest)
             } else {
                 withContext(Dispatchers.IO) {
