@@ -24,7 +24,7 @@ class Authorization(
         internal var userDao: UserDao? = null
         internal var cookieDao: CookieDao? = null
 
-        fun setupDao(userDao: UserDao, cookieDao: CookieDao) {
+        fun setupDaos(userDao: UserDao, cookieDao: CookieDao) {
             this.userDao = userDao
             this.cookieDao = cookieDao
         }

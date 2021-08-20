@@ -8,15 +8,13 @@ import data.AccountInfo
 import data.ChangePasswordRequest
 import data.LoginRequest
 import data.LoginResponse
-import io.ktor.application.*
-import io.ktor.http.*
 import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.routing.get
-import io.ktor.routing.post
 import io.ktor.util.date.*
+import io.ktor.application.*
+import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.mindrot.jbcrypt.BCrypt
@@ -30,6 +28,39 @@ fun Route.accountRoutes(
     cookieConfig: CookieConfig
 ) {
     val secureRandom = SecureRandom()
+
+    post<AuthRoute> {
+        val request = call.receive<LoginRequest>()
+        val user = withContext(Dispatchers.IO) {
+            userDao.getByUsername(request.username)
+        }
+        if (user == null || !BCrypt.checkpw(request.password, user.password)) {
+            call.respond(LoginResponse(error = "User not found or password incorrect"))
+            return@post
+        }
+        val cookieStr = secureRandom.alphaNumeric(32)
+        withContext(Dispatchers.IO) {
+            cookieDao.create(
+                Cookie(
+                    cookieId = cookieStr,
+                    userId = user.userId,
+                    cookie = "",
+                    createDate = Instant.now()
+                )
+            )
+        }
+        call.response.cookies.append(
+            name = "id",
+            value = cookieStr,
+            expires = GMTDate(Instant.now().plus(Duration.ofDays(29)).toEpochMilli()),
+            domain = cookieConfig.domain,
+            secure = cookieConfig.secure,
+            httpOnly = true,
+            extensions = mapOf("SameSite" to "Strict")
+        )
+
+        call.respond(LoginResponse(accountInfo = AccountInfo(user.name, user.email)))
+    }
 
     requireUser(AuthorizationType.COOKIE) {
         get<ApiKeyRoute> {
@@ -72,37 +103,4 @@ fun Route.accountRoutes(
         }
     }
 
-    post<AuthRoute> {
-        val request = call.receive<LoginRequest>()
-        val user = withContext(Dispatchers.IO) {
-            userDao.getByUsername(request.username)
-        }
-        if (user == null || BCrypt.checkpw(request.password, user.password)) {
-            call.respond(LoginResponse(error = "User not found or password incorrect"))
-            return@post
-        }
-        val cookieStr = secureRandom.alphaNumeric(32)
-        withContext(Dispatchers.IO) {
-            cookieDao.create(
-                Cookie(
-                    cookieId = cookieStr,
-                    userId = user.userId,
-                    cookie = "",
-                    createDate = Instant.now()
-                )
-            )
-        }
-        call.response.cookies.append(
-            name = "id",
-            value = cookieStr,
-            expires = GMTDate(Instant.now().plus(Duration.ofDays(29)).toEpochMilli()),
-            domain = cookieConfig.domain,
-            secure = cookieConfig.secure,
-            httpOnly = true,
-            extensions = mapOf("SameSite" to "Strict")
-        )
-
-        call.respond(LoginResponse(accountInfo = AccountInfo(user.name, user.email)))
-
-    }
 }

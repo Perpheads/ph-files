@@ -63,7 +63,6 @@ kotlin {
                 useExperimentalAnnotation("io.ktor.locations.KtorExperimentalLocationsAPI")
             }
 
-            kotlin.srcDirs("build/generated-src/jooq/jvmMain/java")
             dependencies {
                 implementation(kotlin("stdlib-common"))
                 implementation("io.ktor:ktor-server-core:$ktor_version")
@@ -74,6 +73,7 @@ kotlin {
                 implementation("io.ktor:ktor-jackson:$ktor_version")
                 implementation("io.ktor:ktor-html-builder:$ktor_version")
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
+                implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_datatype_version")
                 implementation("ch.qos.logback:logback-classic:$logback_version")
                 implementation("io.github.config4k:config4k:$config4k_version")
                 implementation("com.zaxxer:HikariCP:$hikari_version")
@@ -156,6 +156,10 @@ tasks.named<JooqGenerate>("generateJvmMainJooq") {
 
 tasks.getByName("compileKotlinJvm") {
     dependsOn(tasks.named<JooqGenerate>("generateJvmMainJooq"))
+}
+
+tasks.withType<AbstractCopyTask> {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 distributions {
