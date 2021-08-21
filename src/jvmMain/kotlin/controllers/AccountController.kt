@@ -23,6 +23,13 @@ import org.mindrot.jbcrypt.BCrypt
 import java.security.SecureRandom
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.*
+import kotlin.math.ceil
+import kotlin.math.max
+import kotlin.math.min
 
 fun Route.accountRoutes(
     userDao: UserDao,
@@ -64,26 +71,29 @@ fun Route.accountRoutes(
         call.respond(LoginResponse(accountInfo = AccountInfo(user.name, user.email)))
     }
 
+    val dateFormatter = DateTimeFormatter
+        .ofLocalizedDateTime(FormatStyle.MEDIUM)
+        .withLocale(Locale.ENGLISH)
+        .withZone(ZoneId.systemDefault())
+
     requireUser(AuthorizationType.COOKIE) {
         get<ApiKeyRoute> {
-            withContext(Dispatchers.IO) {
-                call.respondText(call.user().apiKey)
-            }
+            call.respondText(call.user().apiKey)
         }
 
         post<GenerateApiKeyRoute> {
             val newApiKey = secureRandom.alphaNumeric(32)
             withContext(Dispatchers.IO) {
                 userDao.updateApiKey(call.user().userId, newApiKey)
-                call.respondText(newApiKey)
             }
+            call.respondText(newApiKey)
         }
 
         post<LogoutRoute> {
             withContext(Dispatchers.IO) {
                 cookieDao.delete(call.authCookie())
-                call.respondRedirect(application.locations.href(RootRoute))
             }
+            call.respondRedirect(application.locations.href(RootRoute))
         }
 
         post<ChangePasswordRoute> {
@@ -99,8 +109,8 @@ fun Route.accountRoutes(
                 withContext(Dispatchers.IO) {
                     userDao.changePassword(call.user().userId, request.newPassword)
                     cookieDao.deleteAllByUser(call.user().userId)
-                    call.respondText("")
                 }
+                call.respondText("")
             }
         }
     }

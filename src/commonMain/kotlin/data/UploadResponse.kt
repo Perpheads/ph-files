@@ -3,4 +3,4 @@ package com.perpheads.files.data
 import kotlinx.serialization.*
 
 @Serializable
-class UserResponse()
+data class UploadResponse(val link : String)

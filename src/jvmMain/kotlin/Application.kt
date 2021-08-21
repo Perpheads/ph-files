@@ -1,21 +1,20 @@
 package com.perpheads.files
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.perpheads.files.controllers.accountRoutes
+import com.perpheads.files.controllers.fileRoutes
 import com.perpheads.files.daos.CookieDao
 import com.perpheads.files.daos.FileDao
 import com.perpheads.files.daos.UserDao
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.jackson.*
 import io.ktor.locations.*
-import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.serialization.*
 import io.ktor.util.*
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
 import org.slf4j.event.Level
 
@@ -54,10 +53,7 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(ContentNegotiation) {
-        jackson {
-            enable(SerializationFeature.INDENT_OUTPUT)
-            registerModule(JavaTimeModule())
-        }
+        json(Json {  })
     }
     install(Compression) {
         gzip {
@@ -124,9 +120,8 @@ fun Application.module(testing: Boolean = false) {
     println("Starting application")
 
     routing {
-        trace { application.log.trace(it.buildText()) }
-
-        accountRoutes(userDao, cookieDao, phConfig.cookie)
+        accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao)
+        fileRoutes(fileDao, phConfig)
     }
 
     println("Application started")

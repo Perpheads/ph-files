@@ -3,6 +3,7 @@ import org.flywaydb.gradle.task.FlywayMigrateTask
 
 plugins {
     kotlin("multiplatform") version "1.5.21"
+    kotlin("plugin.serialization") version "1.5.21"
     id("org.flywaydb.flyway") version "7.14.0"
     id("nu.studer.jooq") version "6.0"
     application
@@ -16,7 +17,6 @@ val mysql_version: String by project
 val koin_version: String by project
 val hikari_version: String by project
 val config4k_version: String by project
-val jackson_datatype_version: String by project
 val kotlin_react_version: String by project
 
 group = "com.perpheads"
@@ -53,6 +53,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
                 implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
             }
@@ -70,10 +71,9 @@ kotlin {
                 implementation("io.ktor:ktor-locations:$ktor_version")
                 implementation("io.ktor:ktor-websockets:$ktor_version")
                 implementation("io.ktor:ktor-server-host-common:$ktor_version")
-                implementation("io.ktor:ktor-jackson:$ktor_version")
                 implementation("io.ktor:ktor-html-builder:$ktor_version")
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
-                implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_datatype_version")
+                implementation("io.ktor:ktor-serialization:$ktor_version")
                 implementation("ch.qos.logback:logback-classic:$logback_version")
                 implementation("io.github.config4k:config4k:$config4k_version")
                 implementation("com.zaxxer:HikariCP:$hikari_version")

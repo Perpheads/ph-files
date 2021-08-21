@@ -1,35 +1,33 @@
 package com.perpheads.files.controllers
 
 import com.perpheads.files.*
+import com.perpheads.files.NotFoundException
 import com.perpheads.files.daos.FileDao
 import com.perpheads.files.data.File
+import com.perpheads.files.data.UploadResponse
 import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.features.BadRequestException
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.locations.get
+import io.ktor.locations.post
 import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.toJavaInstant
 import org.apache.commons.codec.digest.DigestUtils
 import org.imgscalr.Scalr
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.security.SecureRandom
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.min
 import java.io.File as JFile
 
-fun Route.fileController(
+fun Route.fileRoutes(
     fileDao: FileDao,
     config: PhFilesConfig
 ) {
@@ -109,6 +107,47 @@ fun Route.fileController(
         }
     }
 
+    get<FileRoute> {
+        val md5Header = call.request.headers["If-None-Match"]?.lowercase()
+        val file = withContext(Dispatchers.IO) {
+            fileDao.findByLink(it.link)
+        } ?: throw NotFoundException("File not found")
+        val fileMD5 = file.md5
+        call.response.cacheControl(CacheControl.MaxAge(604800))
+        if (md5Header?.lowercase() == fileMD5) {
+            call.respond(HttpStatusCode.NotModified)
+        } else {
+            fileMD5?.let {
+                call.response.etag(fileMD5)
+            }
+            val contentType = if (file.mimeType.lowercase().contains("html")) {
+                ContentType.Text.Plain
+            } else ContentType.parse(file.mimeType)
+
+            val diskFile = getFile(file.fileId.toString())
+            val fileContent = LocalFileContent(diskFile, contentType)
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Inline.withParameter(ContentDisposition.Parameters.FileName, file.fileName)
+                    .toString()
+            )
+            call.respond(fileContent)
+        }
+    }
+
+
+    requireUser(AuthorizationType.API_KEY) {
+        post<UploadRoute> {
+            val resource = call.receiveMultipart()
+            val firstPart = resource.readPart()
+            if (firstPart == null || firstPart.name != "file" || firstPart !is PartData.FileItem) {
+                throw BadRequestException("Invalid file upload request")
+            }
+            val file = upload(1, firstPart)
+            call.respond(UploadResponse(file.link))
+        }
+    }
+
     requireUser(AuthorizationType.COOKIE) {
         post<UploadCookieRoute> {
             val resource = call.receiveMultipart()
@@ -117,11 +156,7 @@ fun Route.fileController(
                 throw BadRequestException("Invalid file upload request")
             }
             val file = upload(1, firstPart)
-            val formatter = DateTimeFormatter
-                .ofLocalizedDateTime(FormatStyle.MEDIUM)
-                .withLocale(Locale.ENGLISH)
-                .withZone(ZoneId.systemDefault())
-            val formattedDate = formatter.format(file.uploadDate)
+            call.respond(UploadResponse(file.link))
         }
     }
 }

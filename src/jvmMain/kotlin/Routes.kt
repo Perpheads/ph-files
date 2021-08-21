@@ -5,7 +5,7 @@ import io.ktor.locations.*
 @Location("/")
 object RootRoute
 @Location("/account")
-data class AccountRoute(val includeThumbnails: Boolean? = false)
+data class AccountRoute(val includeThumbnails: Boolean = false)
 @Location("/auth")
 object AuthRoute
 @Location("/upload")
@@ -23,7 +23,7 @@ object ApiKeyRoute
 @Location("/generate-api-key")
 object GenerateApiKeyRoute
 @Location("/{link}")
-data class LinkRoute(val link: String)
+data class FileRoute(val link: String)
 @Location("/logout")
 object LogoutRoute
 @Location("/change-password")

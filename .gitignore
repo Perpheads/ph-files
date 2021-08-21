@@ -19,3 +19,4 @@ gradlew.bat
 .kotlintest
 /logs/
 src/jvmMain/java
+files/
