@@ -47,15 +47,17 @@ kotlin {
         withJava()
     }
     js(IR) {
-        browser {}
+        browser {
+            binaries.executable()
+        }
     }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
                 implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
             }
         }
 
@@ -88,10 +90,20 @@ kotlin {
             }
         }
 
+        fun kotlinw(target: String, version: String): String =
+            "org.jetbrains.kotlin-wrappers:kotlin-$target:$version-pre.233-kotlin-1.5.21"
+
+
         val jsMain by getting {
             dependencies {
+                implementation("io.ktor:ktor-client-core:$ktor_version")
+                implementation("io.ktor:ktor-client-js:$ktor_version")
+                implementation("io.ktor:ktor-client-serialization:$ktor_version")
                 implementation(kotlin("stdlib-common"))
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$kotlin_react_version")
+                implementation(kotlinw("react", "17.0.2"))
+                implementation(kotlinw("react-dom", "17.0.2"))
+                implementation(kotlinw("styled", "5.3.0"))
+                implementation(kotlinw("react-router-dom", "5.2.0"))
             }
         }
     }
