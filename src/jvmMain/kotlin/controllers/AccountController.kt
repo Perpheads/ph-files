@@ -44,7 +44,7 @@ fun Route.accountRoutes(
             userDao.getByUsername(request.username)
         }
         if (user == null || !BCrypt.checkpw(request.password, user.password)) {
-            call.respond(LoginResponse(error = "User not found or password incorrect"))
+            call.respond(HttpStatusCode.Unauthorized, LoginResponse(error = "User not found or password incorrect"))
             return@post
         }
         val cookieStr = secureRandom.alphaNumeric(32)

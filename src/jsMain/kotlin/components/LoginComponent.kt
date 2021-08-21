@@ -99,7 +99,7 @@ val LoginPageComponent = functionComponent<LoginComponentProps>("LoginComponent"
     styledDiv {
         styledDiv {
             css { classes += "center-align" }
-            styledImg(src = "/assets/img/logo.jpg") {
+            styledImg(src = "/logo.png") {
                 css {
                     marginBottom = 100.px
                     marginTop = 100.px

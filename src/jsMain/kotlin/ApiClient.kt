@@ -7,6 +7,7 @@ import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.browser.window
 
 object ApiClient {
     private val client = HttpClient(Js) {
@@ -16,7 +17,7 @@ object ApiClient {
     }
 
     suspend fun authenticate(username: String, password: String, remember: Boolean): String {
-        return client.post("/auth") {
+        return client.post(window.location.origin + "/auth") {
             contentType(ContentType.Application.Json)
             body = LoginRequest(username, password, remember)
         }

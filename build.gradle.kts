@@ -1,5 +1,6 @@
 import nu.studer.gradle.jooq.JooqGenerate
 import org.flywaydb.gradle.task.FlywayMigrateTask
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 plugins {
     kotlin("multiplatform") version "1.5.21"
@@ -76,6 +77,7 @@ kotlin {
                 implementation("io.ktor:ktor-html-builder:$ktor_version")
                 implementation("io.ktor:ktor-server-netty:$ktor_version")
                 implementation("io.ktor:ktor-serialization:$ktor_version")
+                implementation("io.ktor:ktor-html-builder:$ktor_version")
                 implementation("ch.qos.logback:logback-classic:$logback_version")
                 implementation("io.github.config4k:config4k:$config4k_version")
                 implementation("com.zaxxer:HikariCP:$hikari_version")
@@ -170,9 +172,27 @@ tasks.getByName("compileKotlinJvm") {
     dependsOn(tasks.named<JooqGenerate>("generateJvmMainJooq"))
 }
 
+tasks.getByName<KotlinWebpack>("jsBrowserProductionWebpack") {
+    outputFileName = "ph-files.js"
+    //sourceMaps = true
+    //report = true
+    //args = mutableListOf("--config", "..\\..\\..\\..\\webpack.config.extra.js", "--merge")
+}
+
+
 tasks.withType<AbstractCopyTask> {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
+
+tasks.getByName<Jar>("jvmJar") {
+    dependsOn(tasks.getByName("jsBrowserProductionWebpack"))
+    val jsBrowserProductionWebpack = tasks.getByName<KotlinWebpack>("jsBrowserProductionWebpack")
+
+    listOf(jsBrowserProductionWebpack.outputFileName, jsBrowserProductionWebpack.outputFileName + ".map", "modules.js", "modules.js.map").forEach {
+        from(File(jsBrowserProductionWebpack.destinationDirectory, it))
+    }
+}
+
 
 distributions {
     main {

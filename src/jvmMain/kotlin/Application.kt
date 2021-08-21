@@ -8,6 +8,7 @@ import com.perpheads.files.daos.UserDao
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.locations.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -53,7 +54,7 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(ContentNegotiation) {
-        json(Json {  })
+        json(Json { })
     }
     install(Compression) {
         gzip {
@@ -122,6 +123,14 @@ fun Application.module(testing: Boolean = false) {
     routing {
         accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao)
         fileRoutes(fileDao, phConfig)
+        static("/") {
+            resource("ph-files.js")
+            defaultResource("index.html")
+            resource("favicon.ico")
+            resource("favicon.png")
+            resource("index.html")
+            resource("logo.png")
+        }
     }
 
     println("Application started")
