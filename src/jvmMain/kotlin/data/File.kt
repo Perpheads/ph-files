@@ -26,6 +26,4 @@ data class File(
         val amount = ((size / (1024.0.pow(digitGroup))) * 10).roundToInt() / 10.0
         return "$amount $unit"
     }
-
-
 }
