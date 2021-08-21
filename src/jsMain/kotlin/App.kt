@@ -1,6 +1,7 @@
 package com.perpheads.files
 
 import com.perpheads.files.components.LoginPageComponent
+import com.perpheads.files.components.loginPageComponent
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.css.Color
@@ -18,7 +19,7 @@ import styled.styledDiv
 fun main() {
     window.onload = {
         render(document.getElementById("root")) {
-            child(LoginPageComponent)
+            loginPageComponent {  }
         }
     }
 }

@@ -7,13 +7,10 @@ import kotlinx.css.*
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
 import org.w3c.dom.HTMLInputElement
-import react.RProps
-import react.StateSetter
+import react.*
 import react.dom.label
 import react.dom.onClick
 import react.dom.span
-import react.functionComponent
-import react.useState
 import styled.*
 
 
@@ -116,8 +113,14 @@ val LoginPageComponent = functionComponent<LoginComponentProps>("LoginComponent"
                 +error
             }
         }
-        child(LoginCardComponent) {
-            attrs.setError = errorSet
-        }
+        loginCardComponent { setError = errorSet }
     }
+}
+
+fun RBuilder.loginCardComponent(handler: LoginCardComponentProps.() -> Unit) = child(LoginCardComponent) {
+    attrs { handler() }
+}
+
+fun RBuilder.loginPageComponent(handler: LoginComponentProps.() -> Unit) = child(LoginPageComponent) {
+    attrs { handler() }
 }
