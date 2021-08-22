@@ -4,6 +4,7 @@ import com.perpheads.files.*
 import com.perpheads.files.NotFoundException
 import com.perpheads.files.daos.FileDao
 import com.perpheads.files.data.File
+import com.perpheads.files.data.FileResponse
 import com.perpheads.files.data.UploadResponse
 import io.ktor.application.*
 import io.ktor.features.BadRequestException
@@ -16,8 +17,10 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.routing.delete
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.toKotlinInstant
 import org.apache.commons.codec.digest.DigestUtils
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -25,6 +28,10 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.security.SecureRandom
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -164,6 +171,11 @@ fun Route.fileRoutes(
         }
     }
 
+    val dateFormatter = DateTimeFormatter
+        .ofLocalizedDateTime(FormatStyle.MEDIUM)
+        .withLocale(Locale.ENGLISH)
+        .withZone(ZoneId.systemDefault())
+
     requireUser(AuthorizationType.COOKIE) {
         post<UploadCookieRoute> {
             val resource = call.receiveMultipart()
@@ -172,7 +184,18 @@ fun Route.fileRoutes(
                 throw BadRequestException("Invalid file upload request")
             }
             val file = upload(1, firstPart)
-            call.respond(UploadResponse(file.link))
+            delay(5000)
+            call.respond(FileResponse(
+                fileId = file.fileId,
+                link = file.link,
+                fileName = file.fileName,
+                mimeType = file.mimeType,
+                uploadDate = file.uploadDate.toKotlinInstant(),
+                formattedUploadDate = dateFormatter.format(file.uploadDate),
+                size = file.size,
+                thumbnail = file.thumbnail,
+                hasThumbnail = file.thumbnail != null
+            ))
         }
 
         delete<FileRoute> { request ->

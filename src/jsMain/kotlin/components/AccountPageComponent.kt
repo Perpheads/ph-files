@@ -23,6 +23,12 @@ import styled.styledUl
 external interface AccountPageProps : RProps {
 }
 
+private fun <T> List<T>.prepend(elem: T): List<T> {
+    val newList = toMutableList()
+    newList.add(0, elem)
+    return newList
+}
+
 val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props ->
     val location = useLocation()
     val parameters = parseQueryString(location.search.drop(1))
@@ -135,7 +141,6 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
                     }
                 }
             }
-            //FileButtonComponent
         }
     }
 }

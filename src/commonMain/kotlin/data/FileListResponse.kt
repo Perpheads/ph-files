@@ -2,7 +2,7 @@ package com.perpheads.files.data
 
 import kotlinx.serialization.*
 
-@Serializable
+@Serializable()
 data class FileListResponse(
     val files: List<FileResponse>,
     val totalPages: Int,

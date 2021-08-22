@@ -1,3 +1,4 @@
+import com.github.dockerjava.core.dockerfile.Dockerfile
 import nu.studer.gradle.jooq.JooqGenerate
 import org.flywaydb.gradle.task.FlywayMigrateTask
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
@@ -7,6 +8,7 @@ plugins {
     kotlin("plugin.serialization") version "1.5.21"
     id("org.flywaydb.flyway") version "7.14.0"
     id("nu.studer.jooq") version "6.0"
+    id("com.bmuschko.docker-java-application") version "7.1.0"
     application
 }
 
@@ -28,7 +30,18 @@ repositories {
 }
 
 application {
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
     mainClass.set("com.perpheads.files.ApplicationKt")
+}
+
+docker {
+    javaApplication {
+        baseImage.set("adoptopenjdk:11")
+        maintainer.set("Perpheads")
+        ports.add(8080)
+        jvmArgs.add("-XX:+UseShenandoahGC")
+        jvmArgs.add("-XX:MaxRAMPercentage=90")
+    }
 }
 
 dependencies {
@@ -96,6 +109,9 @@ kotlin {
 
 
         val jsMain by getting {
+            languageSettings {
+                useExperimentalAnnotation("kotlinx.serialization.ExperimentalSerializationApi")
+            }
             dependencies {
                 implementation("io.ktor:ktor-client-core:$ktor_version")
                 implementation("io.ktor:ktor-client-js:$ktor_version")
@@ -173,9 +189,7 @@ tasks.getByName("compileKotlinJvm") {
 
 tasks.getByName<KotlinWebpack>("jsBrowserProductionWebpack") {
     outputFileName = "ph-files.js"
-    //sourceMaps = true
-    //report = true
-    //args = mutableListOf("--config", "..\\..\\..\\..\\webpack.config.extra.js", "--merge")
+    sourceMaps = true
 }
 
 
@@ -183,11 +197,21 @@ tasks.withType<AbstractCopyTask> {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
+tasks.getByName("dockerCreateDockerfile") {
+    dependsOn(tasks.getByName("jsBrowserProductionWebpack"))
+    doLast {
+        copy {
+            from("$buildDir/distributions/ph-files.js")
+            into("$buildDir/docker/resources/")
+        }
+    }
+}
+
 tasks.getByName<Jar>("jvmJar") {
     dependsOn(tasks.getByName("jsBrowserProductionWebpack"))
     val jsBrowserProductionWebpack = tasks.getByName<KotlinWebpack>("jsBrowserProductionWebpack")
 
-    listOf(jsBrowserProductionWebpack.outputFileName, jsBrowserProductionWebpack.outputFileName + ".map", "modules.js", "modules.js.map").forEach {
+    listOf(jsBrowserProductionWebpack.outputFileName, jsBrowserProductionWebpack.outputFileName + ".map").forEach {
         from(File(jsBrowserProductionWebpack.destinationDirectory, it))
     }
 }

@@ -53,6 +53,19 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
+    val staticCachingOptions = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 604800))
+    install(CachingHeaders) {
+        options { outgoingContent ->
+            when (outgoingContent.contentType?.withoutParameters()) {
+                ContentType.Text.JavaScript -> staticCachingOptions
+                ContentType.Text.Html -> staticCachingOptions
+                ContentType.Image.PNG -> staticCachingOptions
+                ContentType.Image.XIcon -> staticCachingOptions
+                else -> null
+            }
+        }
+    }
+
     install(ContentNegotiation) {
         json(Json { })
     }
