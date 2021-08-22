@@ -45,24 +45,31 @@ fun Route.accountRoutes(
             userDao.getByUsername(request.username)
         }
         if (user == null || !BCrypt.checkpw(request.password, user.password)) {
-            call.respond(HttpStatusCode.Unauthorized, LoginResponse(error = "User not found or password incorrect"))
+            call.respond(HttpStatusCode.OK, LoginResponse(error = "User not found or password incorrect"))
             return@post
         }
         val cookieStr = secureRandom.alphaNumeric(32)
+        val expiryDate = if (request.remember) {
+            Instant.now().plus(Duration.ofDays(30))
+        } else Instant.now().plus(Duration.ofDays(1))
+
+        val cookieExpiryDate = if (request.remember) {
+            GMTDate(expiryDate.toEpochMilli())
+        } else null
+
         withContext(Dispatchers.IO) {
             cookieDao.create(
                 Cookie(
                     cookieId = cookieStr,
                     userId = user.userId,
-                    cookie = "",
-                    createDate = Instant.now()
+                    expiry = expiryDate
                 )
             )
         }
         call.response.cookies.append(
             name = "id",
             value = cookieStr,
-            expires = GMTDate(Instant.now().plus(Duration.ofDays(29)).toEpochMilli()),
+            expires = cookieExpiryDate,
             domain = cookieConfig.domain,
             secure = cookieConfig.secure,
             httpOnly = true,
@@ -94,6 +101,7 @@ fun Route.accountRoutes(
             withContext(Dispatchers.IO) {
                 cookieDao.delete(call.authCookie())
             }
+            call.response.cookies.appendExpired("id")
             call.respondRedirect(application.locations.href(RootRoute))
         }
 
@@ -111,6 +119,7 @@ fun Route.accountRoutes(
                     userDao.changePassword(call.user().userId, request.newPassword)
                     cookieDao.deleteAllByUser(call.user().userId)
                 }
+                call.response.cookies.appendExpired("id")
                 call.respondText("")
             }
         }
@@ -147,8 +156,13 @@ fun Route.accountRoutes(
             call.respond(thumbnails)
         }
 
-        get<AccountRoute> {
-            val includeThumbnails = it.includeThumbnails
+        get<AccountInfoRoute> {
+            val user = call.user()
+            call.respond(AccountInfo(user.name, user.email))
+        }
+
+        post<AccountRoute> {
+            val includeThumbnails = it.include_thumbnails
             val request = call.receive<SearchRequest>()
             val page = request.page ?: 1
             val entriesPerPage = request.entriesPerPage.coerceIn(1, 100)

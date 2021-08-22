@@ -93,6 +93,7 @@ fun Application.module(testing: Boolean = false) {
             call.respond(message = cause.content, status = HttpStatusCode.Forbidden)
         }
         exception<UnauthorizedException> { cause ->
+            call.response.cookies.appendExpired("id")
             call.respond(message = cause.content, status = HttpStatusCode.Unauthorized)
         }
         exception<BadRequestException> { cause ->
@@ -130,6 +131,7 @@ fun Application.module(testing: Boolean = false) {
             resource("favicon.png")
             resource("index.html")
             resource("logo.png")
+            resource("thumbnail.png")
         }
     }
 

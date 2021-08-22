@@ -37,6 +37,7 @@ class FileDao(
             .from(FILES)
             .where(FILES.FILE_ID.`in`(fileIds))
             .and(FILES.THUMBNAIL.isNotNull)
+            .orderBy(FILES.FILE_ID.desc())
             .fetch {
                 it[FILES.FILE_ID] to it[FILES.THUMBNAIL]
             }
@@ -72,8 +73,9 @@ class FileDao(
         val query = create.select()
             .from(FILES)
             .where(condition)
-        val files = query.offset(offset).limit(limit).fetchInto(File::class.java)
+            .orderBy(FILES.FILE_ID.desc())
         val fileCount = create.fetchCount(query)
+        val files = query.offset(offset).limit(limit).fetchInto(File::class.java)
         return fileCount to files
     }
 
@@ -99,10 +101,9 @@ class FileDao(
             .fetchOneInto(File::class.java)
     }
 
-    fun delete(fileId: Int, userId: Int, create: DSLContext = dslContext) {
+    fun delete(fileId: Int, create: DSLContext = dslContext) {
         create.deleteFrom(FILES)
             .where(FILES.FILE_ID.eq(fileId))
-            .and(FILES.USER_ID.eq(userId))
             .execute()
     }
 }

@@ -9,22 +9,25 @@ import io.ktor.application.*
 import io.ktor.features.BadRequestException
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.locations.get
+import io.ktor.locations.*
 import io.ktor.locations.post
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.routing.delete
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.digest.DigestUtils
-import org.imgscalr.Scalr
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.security.SecureRandom
 import java.time.Instant
 import javax.imageio.ImageIO
 import kotlin.math.min
+import kotlin.math.roundToInt
 import java.io.File as JFile
 
 fun Route.fileRoutes(
@@ -63,10 +66,23 @@ fun Route.fileRoutes(
     fun tryGenerateThumbnail(fileId: Int, outputFile: JFile, mimeType: String) {
         if (mimeType != "image/png" && mimeType != "image/jpeg") return
         val image = ImageIO.read(outputFile)
-        val outputImage = Scalr.resize(image, Scalr.Method.AUTOMATIC, Scalr.Mode.AUTOMATIC, thumbnailSize)
+        val thumbImage = BufferedImage(thumbnailSize, thumbnailSize, BufferedImage.TYPE_INT_RGB)
+        val g = thumbImage.createGraphics()
+
+        val shorterSide = min(image.height, image.width)
+        val scaleFactor = thumbnailSize.toDouble() / shorterSide
+        val scaledWidth = (image.width * scaleFactor).roundToInt()
+        val scaledHeight = (image.height * scaleFactor).roundToInt()
+        val x = -(scaledWidth - thumbnailSize) / 2
+        val y = -(scaledHeight - thumbnailSize) / 2
+        g.drawImage(image, x, y, scaledWidth, scaledHeight, Color(255, 255, 255, 0), null)
+
+        image.flush()
         val outputArrStream = ByteArrayOutputStream()
-        ImageIO.write(outputImage, "jpg", outputArrStream)
+        ImageIO.write(thumbImage, "jpg", outputArrStream)
+        thumbImage.flush()
         val thumbnail = outputArrStream.toByteArray()
+
         fileDao.updateThumbnail(fileId, thumbnail)
     }
 
@@ -157,6 +173,20 @@ fun Route.fileRoutes(
             }
             val file = upload(1, firstPart)
             call.respond(UploadResponse(file.link))
+        }
+
+        delete<FileRoute> { request ->
+            val file = withContext(Dispatchers.IO) {
+                fileDao.findByLink(request.link)
+            } ?: throw NotFoundException("File not found")
+            if (file.userId != call.user().userId) {
+                throw ForbiddenException("Not your file!")
+            }
+            withContext(Dispatchers.IO) {
+                fileDao.delete(file.fileId)
+                getFile(file.fileId.toString()).delete()
+            }
+            call.respondText("")
         }
     }
 }

@@ -5,7 +5,9 @@ import io.ktor.locations.*
 @Location("/")
 object RootRoute
 @Location("/account")
-data class AccountRoute(val includeThumbnails: Boolean = false)
+data class AccountRoute(val include_thumbnails: Boolean = false)
+@Location("/account-info")
+object AccountInfoRoute
 @Location("/auth")
 object AuthRoute
 @Location("/upload")

@@ -15,15 +15,4 @@ data class File(
     val size: Int,
     val thumbnail: ByteArray?,
     val md5: String?
-) {
-    companion object {
-        private val SIZE_UNITS = listOf("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-    }
-    fun humanReadableByteSize(): String {
-        if (size <= 0) return  "0 B"
-        val digitGroup = (log10(size.toDouble()) / 10).toInt()
-        val unit = SIZE_UNITS.getOrNull(digitGroup) ?: "BIG"
-        val amount = ((size / (1024.0.pow(digitGroup))) * 10).roundToInt() / 10.0
-        return "$amount $unit"
-    }
-}
+)

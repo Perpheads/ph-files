@@ -14,7 +14,7 @@ class CookieDao(
 ) {
     private val dslContext = DSL.using(conf)
 
-    private val cookieValidCondition = COOKIES.CREATE_DATE.gt(DSL.localDateTimeSub(LocalDateTime.now(), 30))
+    private val cookieValidCondition = COOKIES.EXPIRY.gt(LocalDateTime.now())
 
     fun create(cookie: Cookie, create: DSLContext = dslContext) {
         val record = create.newRecord(COOKIES)

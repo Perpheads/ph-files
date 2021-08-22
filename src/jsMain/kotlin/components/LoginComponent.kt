@@ -8,9 +8,10 @@ import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
 import org.w3c.dom.HTMLInputElement
 import react.*
-import react.dom.label
-import react.dom.onClick
-import react.dom.span
+import react.dom.*
+import react.router.dom.redirect
+import react.router.dom.routeLink
+import react.router.dom.useHistory
 import styled.*
 
 
@@ -25,33 +26,51 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
     val (username, setUsername) = useState("")
     val (password, setPassword) = useState("")
     val (remember, setRemember) = useState(false)
+    val history = useHistory()
 
-    fun login() {
-        props.setError(null)
-        MainScope().launch {
-            ApiClient.authenticate(username, password, remember)
+    useEffectOnce {
+        ApiClient.mainScope.launch {
+            if (ApiClient.getLoggedIn()) {
+                history.replace("/account")
+            }
         }
     }
 
-    styledDiv {
-        css { classes += "valign-wrapper row log-in" }
-        styledDiv {
-            css { classes += "col card hoverable s10 pull-s1 m6 pull-m3 l4 pull-l4 shake animated" }
-            styledDiv {
-                css { classes += "card-content" }
-                styledSpan {
-                    css { classes += "card-title" }
+    fun login() {
+        props.setError(null)
+        ApiClient.mainScope.launch {
+            try {
+                val response = ApiClient.authenticate(username, password, remember)
+                props.setError(response.error)
+                if (response.error == null) {
+                    history.replace("/account")
+                }
+            } catch (e: Exception) {
+                props.setError("An unknown error occurred")
+            }
+        }
+    }
+
+    val onEnterPressed: KeyboardEventHandler<*> = { event ->
+        if (event.key == "Enter") {
+            login()
+        }
+    }
+
+    div("valign-wrapper row log-in") {
+        div("col card hoverable s10 pull-s1 m6 pull-m3 l4 pull-l4 shake animated") {
+            div("card-content") {
+                span("card-title") {
                     +"Enter your details"
                 }
-                styledDiv {
-                    css { classes += "row" }
-                    styledDiv {
-                        css { classes += "input-field col s11" }
-                        styledInput(type = InputType.text) {
+                div("row") {
+                    div("input-field col s11") {
+                        input(type = InputType.text) {
                             attrs.placeholder = "Username"
                             attrs.onChangeFunction = { event ->
                                 setUsername((event.target as HTMLInputElement).value)
                             }
+                            attrs.onKeyPress = onEnterPressed
                         }
                     }
                     styledDiv {
@@ -62,10 +81,10 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
                             attrs.onChangeFunction = { event ->
                                 setPassword((event.target as HTMLInputElement).value)
                             }
+                            attrs.onKeyPress = onEnterPressed
                         }
                     }
-                    styledDiv {
-                        css { classes += "center-align" }
+                    div("center-align") {
                         label {
                             styledInput(type = InputType.checkBox) {
                                 attrs.onChangeFunction = { event ->
@@ -78,10 +97,8 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
                 }
             }
 
-            styledDiv {
-                css { classes += "card-action right-align" }
-                styledButton {
-                    css { classes += "btn waves-effect waves-light" }
+            div("card-action right-align") {
+                button(classes = "btn waves-effect waves-light") {
                     +"Login"
                     attrs.onClick = { login() }
                 }
@@ -93,9 +110,8 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
 
 val LoginPageComponent = functionComponent<LoginComponentProps>("LoginComponent") { _ ->
     val (error, errorSet) = useState<String?>(null)
-    styledDiv {
-        styledDiv {
-            css { classes += "center-align" }
+    div {
+        div("center-align") {
             styledImg(src = "/logo.png") {
                 css {
                     marginBottom = 100.px

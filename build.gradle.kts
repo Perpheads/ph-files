@@ -84,7 +84,6 @@ kotlin {
                 implementation("org.jooq:jooq:$jooq_version")
                 implementation("org.flywaydb:flyway-core:$flyway_version")
                 implementation("org.mindrot:jbcrypt:0.4")
-                implementation("org.imgscalr:imgscalr-lib:4.2")
                 implementation("commons-codec:commons-codec:1.15")
                 runtimeOnly("org.flywaydb:flyway-gradle-plugin:$flyway_version")
                 implementation("io.insert-koin:koin-ktor:$koin_version")
