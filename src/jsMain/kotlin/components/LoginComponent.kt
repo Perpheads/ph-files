@@ -14,10 +14,6 @@ import react.router.dom.routeLink
 import react.router.dom.useHistory
 import styled.*
 
-
-external interface LoginComponentProps : RProps {
-}
-
 external interface LoginCardComponentProps : RProps {
     var setError: StateSetter<String?>
 }
@@ -73,10 +69,8 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
                             attrs.onKeyPress = onEnterPressed
                         }
                     }
-                    styledDiv {
-                        css { classes += "input-field col s11" }
-                        styledInput(type = InputType.password) {
-                            css { classes += "validate" }
+                    div("input-field col s11") {
+                        input(type = InputType.password, classes = "validate") {
                             attrs.placeholder = "Password"
                             attrs.onChangeFunction = { event ->
                                 setPassword((event.target as HTMLInputElement).value)
@@ -108,7 +102,7 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
 }
 
 
-val LoginPageComponent = functionComponent<LoginComponentProps>("LoginComponent") { _ ->
+val LoginPageComponent = functionComponent<RProps>("LoginComponent") { _ ->
     val (error, errorSet) = useState<String?>(null)
     div {
         div("center-align") {
@@ -137,6 +131,4 @@ fun RBuilder.loginCardComponent(handler: LoginCardComponentProps.() -> Unit) = c
     attrs { handler() }
 }
 
-fun RBuilder.loginPageComponent(handler: LoginComponentProps.() -> Unit) = child(LoginPageComponent) {
-    attrs { handler() }
-}
+fun RBuilder.loginPageComponent() = child(LoginPageComponent)

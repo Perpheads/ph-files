@@ -83,4 +83,13 @@ object ApiClient {
             body = LoginRequest(username, password, remember)
         }
     }
+
+    suspend fun logout() = client.post<Unit>(window.location.origin + "/logout")
+
+    suspend fun changePassword(existingPassword: String, newPassword: String) {
+        return client.post(window.location.origin + "/change-password") {
+            contentType(ContentType.Application.Json)
+            body = ChangePasswordRequest(existingPassword, newPassword)
+        }
+    }
 }

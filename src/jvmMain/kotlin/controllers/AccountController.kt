@@ -86,7 +86,7 @@ fun Route.accountRoutes(
 
     requireUser(AuthorizationType.COOKIE) {
         get<ApiKeyRoute> {
-            call.respondText(call.user().apiKey)
+            call.respond(ApiKeyResponse(call.user().apiKey))
         }
 
         post<GenerateApiKeyRoute> {
@@ -94,7 +94,7 @@ fun Route.accountRoutes(
             withContext(Dispatchers.IO) {
                 userDao.updateApiKey(call.user().userId, newApiKey)
             }
-            call.respondText(newApiKey)
+            call.respond(ApiKeyResponse(newApiKey))
         }
 
         post<LogoutRoute> {
