@@ -4,11 +4,11 @@ variables:
   MYSQL_DATABASE: "files"
   MYSQL_USER: "files"
   MYSQL_PASSWORD: "files"
-  DB_HOST: "mysql"
-  DB_PORT: 3306
-  DB_DATABASE: "files"
-  DB_USER: "files"
-  DB_PASSWORD: "files"
+  FILES_DB_HOST: "mysql"
+  FILES_DB_PORT: 3306
+  FILES_DB_DATABASE: "files"
+  FILES_DB_USER: "files"
+  FILES_DB_PASSWORD: "files"
 
 services:
   - mysql:latest
