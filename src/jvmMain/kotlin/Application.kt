@@ -74,13 +74,7 @@ fun Application.module(testing: Boolean = false) {
         json(Json { })
     }
     install(Compression) {
-        gzip {
-            priority = 1.0
-        }
-        deflate {
-            priority = 10.0
-            minimumSize(1024) // condition
-        }
+        gzip()
     }
 
     install(CORS) {

@@ -66,6 +66,7 @@ val NavBarComponent = fc<NavBarProps>("NavBarComponent") { props ->
                             css {
                                 height = 44.px
                                 minHeight = 44.px
+                                maxHeight = 44.px
                             }
                             attrs {
                                 id = "search"

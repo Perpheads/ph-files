@@ -132,7 +132,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
             this.search = search
             showSearchBar = true
             onSearchChanged = {
-                changeUrl(page, it)
+                changeUrl(1, it)
             }
         }
         div("container") {
