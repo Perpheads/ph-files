@@ -70,6 +70,10 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
+    install(PartialContent) {
+
+    }
+
     install(ContentNegotiation) {
         json(Json { })
     }
