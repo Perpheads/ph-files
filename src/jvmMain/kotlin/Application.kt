@@ -16,6 +16,7 @@ import io.ktor.serialization.*
 import io.ktor.util.*
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
+import org.flywaydb.core.Flyway
 import org.koin.core.context.startKoin
 import org.slf4j.event.Level
 
@@ -30,6 +31,9 @@ fun Application.module(testing: Boolean = false) {
     val koin = startKoin {
         modules(PhFilesModule.module)
     }.koin
+
+    val flyway = koin.get<Flyway>()
+    flyway.migrate()
 
     val userDao = koin.get<UserDao>()
     val cookieDao = koin.get<CookieDao>()

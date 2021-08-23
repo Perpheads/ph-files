@@ -11,11 +11,17 @@ import org.jooq.Configuration
 import org.jooq.SQLDialect
 import org.jooq.impl.DefaultConfiguration
 import org.koin.dsl.module
+import javax.sql.DataSource
 
 object PhFilesModule {
     val module = module {
         single<PhFilesConfig> {
             ConfigFactory.load().extract("phFiles")
+        }
+
+        single<DataSource> {
+            val config = get<PhFilesConfig>().database
+            HikariDataSource(config.toHikariConfig())
         }
 
         single {
@@ -28,10 +34,9 @@ object PhFilesModule {
 
         single {
             val config = get<PhFilesConfig>().database
-            val dataSource = HikariDataSource(config.toHikariConfig())
             DefaultConfiguration()
                 .set(SQLDialect.MYSQL)
-                .set(dataSource)
+                .set(get<DataSource>())
         }
 
         single {
