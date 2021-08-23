@@ -21,6 +21,11 @@ data class DatabaseConfig(
     }
 }
 
+data class CorsConfig(
+    val host: String,
+    val anyHost: Boolean
+)
+
 data class CookieConfig(
     val domain: String,
     val secure: Boolean
@@ -29,5 +34,6 @@ data class CookieConfig(
 data class PhFilesConfig(
     val database: DatabaseConfig,
     val filesFolder: File,
-    val cookie: CookieConfig
+    val cookie: CookieConfig,
+    val cors: CorsConfig
 )

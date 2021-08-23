@@ -84,13 +84,21 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(CORS) {
+        method(HttpMethod.Get)
         method(HttpMethod.Options)
         method(HttpMethod.Put)
+        method(HttpMethod.Post)
         method(HttpMethod.Delete)
-        method(HttpMethod.Patch)
-        header(HttpHeaders.Authorization)
+        header(HttpHeaders.Cookie)
+        header(HttpHeaders.ContentType)
+        header(HttpHeaders.ContentLength)
+        header(HttpHeaders.ContentEncoding)
         allowCredentials = true
-        anyHost()
+        if (phConfig.cors.anyHost) {
+            anyHost()
+        } else {
+            host(phConfig.cors.host, schemes = listOf("http", "https"))
+        }
     }
 
     install(CallLogging) {
