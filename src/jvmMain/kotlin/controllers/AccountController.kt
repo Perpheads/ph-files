@@ -193,7 +193,7 @@ fun Route.accountRoutes(
                     uploadDate = f.uploadDate.toKotlinInstant(),
                     formattedUploadDate = formattedDate,
                     size = f.size,
-                    thumbnail = if (includeThumbnails) f.thumbnail else null,
+                    thumbnail = null,
                     f.thumbnail != null
                 )
             }

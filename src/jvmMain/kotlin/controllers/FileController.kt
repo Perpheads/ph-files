@@ -192,7 +192,7 @@ fun Route.fileRoutes(
                 uploadDate = file.uploadDate.toKotlinInstant(),
                 formattedUploadDate = dateFormatter.format(file.uploadDate),
                 size = file.size,
-                thumbnail = file.thumbnail,
+                thumbnail = null,
                 hasThumbnail = file.thumbnail != null
             ))
         }

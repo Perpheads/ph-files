@@ -20,7 +20,7 @@ data class FileResponse(
     val uploadDate: Instant,
     val formattedUploadDate: String,
     val size: Int,
-    val thumbnail: ByteArray?,
+    val thumbnail: String?,
     val hasThumbnail: Boolean
 ) {
     companion object {
