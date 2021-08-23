@@ -145,11 +145,11 @@ fun Route.accountRoutes(
         }
 
         val base64Encoder = Base64.getEncoder()
-        get<ThumbnailsRoute> {
+        post<ThumbnailsRoute> {
             val request = call.receive<ThumbnailRequest>()
             if (request.fileIds.size > 100) {
                 call.respondText("Requesting too many fileIds", status = HttpStatusCode.BadRequest)
-                return@get
+                return@post
             }
             val thumbnails = withContext(Dispatchers.IO) {
                 fileDao.getThumbnails(request.fileIds, call.user().userId)
