@@ -15,6 +15,7 @@ import io.ktor.routing.*
 import io.ktor.util.date.*
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinInstant
@@ -152,7 +153,7 @@ fun Route.accountRoutes(
             }
             val thumbnails = withContext(Dispatchers.IO) {
                 fileDao.getThumbnails(request.fileIds, call.user().userId)
-                    .map { (fileId, thumbnail) -> ThumbnailResponse(fileId, thumbnail) }
+                    .map { (fileId, thumbnail) -> ThumbnailResponse(fileId, base64Encoder.encodeToString(thumbnail)) }
             }
             call.respond(thumbnails)
         }
