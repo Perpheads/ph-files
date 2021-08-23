@@ -166,7 +166,7 @@ fun Route.fileRoutes(
             if (firstPart == null || firstPart.name != "file" || firstPart !is PartData.FileItem) {
                 throw BadRequestException("Invalid file upload request")
             }
-            val file = upload(1, firstPart)
+            val file = upload(call.user().userId, firstPart)
             call.respond(UploadResponse(file.link))
         }
     }
@@ -183,7 +183,7 @@ fun Route.fileRoutes(
             if (firstPart == null || firstPart.name != "file" || firstPart !is PartData.FileItem) {
                 throw BadRequestException("Invalid file upload request")
             }
-            val file = upload(1, firstPart)
+            val file = upload(call.user().userId, firstPart)
             call.respond(FileResponse(
                 fileId = file.fileId,
                 link = file.link,
