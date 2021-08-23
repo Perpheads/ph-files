@@ -143,6 +143,7 @@ fun Route.accountRoutes(
             }
         }
 
+        val base64Encoder = Base64.getEncoder()
         get<ThumbnailsRoute> {
             val request = call.receive<ThumbnailRequest>()
             if (request.fileIds.size > 100) {

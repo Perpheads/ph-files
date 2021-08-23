@@ -37,6 +37,7 @@ class FileDao(
             .from(FILES)
             .where(FILES.FILE_ID.`in`(fileIds))
             .and(FILES.THUMBNAIL.isNotNull)
+            .and(FILES.USER_ID.eq(userId))
             .orderBy(FILES.FILE_ID.desc())
             .fetch {
                 it[FILES.FILE_ID] to it[FILES.THUMBNAIL]

@@ -6,5 +6,5 @@ import kotlinx.serialization.*
 data class ThumbnailResponse(
     @SerialName("fileID")
     val fileId: Int,
-    val thumbnail: ByteArray?
+    val thumbnail: String?
 )

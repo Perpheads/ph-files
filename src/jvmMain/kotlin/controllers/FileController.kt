@@ -184,7 +184,6 @@ fun Route.fileRoutes(
                 throw BadRequestException("Invalid file upload request")
             }
             val file = upload(1, firstPart)
-            delay(5000)
             call.respond(FileResponse(
                 fileId = file.fileId,
                 link = file.link,
