@@ -82,6 +82,8 @@ fun Route.fileRoutes(
         val scaledHeight = (image.height * scaleFactor).roundToInt()
         val x = -(scaledWidth - thumbnailSize) / 2
         val y = -(scaledHeight - thumbnailSize) / 2
+        g.background = Color.WHITE
+        g.clearRect(0, 0, thumbnailSize, thumbnailSize)
         g.drawImage(image, x, y, scaledWidth, scaledHeight, Color(255, 255, 255, 0), null)
 
         image.flush()
@@ -137,7 +139,7 @@ fun Route.fileRoutes(
         } ?: throw NotFoundException("File not found")
         val fileMD5 = file.md5
         call.response.cacheControl(CacheControl.MaxAge(604800))
-        if (md5Header?.lowercase() == fileMD5) {
+        if (fileMD5 != null && md5Header?.lowercase() == fileMD5) {
             call.respond(HttpStatusCode.NotModified)
         } else {
             fileMD5?.let {

@@ -1,16 +1,12 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
-import com.perpheads.files.ApiClient.UnauthorizedException
 import com.perpheads.files.ApiClient.uploadFile
-import com.perpheads.files.data.FileListResponse
 import com.perpheads.files.data.FileResponse
+import com.perpheads.files.logoutIfUnauthorized
 import io.ktor.http.*
 import kotlinx.browser.document
-import kotlinx.browser.window
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.css.*
 import kotlinx.html.InputType
 import kotlinx.html.id
@@ -19,12 +15,10 @@ import org.w3c.dom.asList
 import org.w3c.files.File
 import react.*
 import react.dom.*
-import react.router.dom.redirect
 import react.router.dom.useHistory
 import react.router.dom.useLocation
 import styled.css
 import styled.styledDiv
-import styled.styledUl
 
 external interface AccountPageProps : RProps {
 }
@@ -72,7 +66,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
     }
 
     suspend fun loadFiles() {
-        try {
+        logoutIfUnauthorized(history) {
             val response = ApiClient.loadFiles(query = search, page = page)
             setPaginationData(
                 PaginationData(
@@ -83,30 +77,18 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
                 )
             )
             setFiles(response.files)
-        } catch (e: UnauthorizedException) {
-            history.replace("/")
-        } catch (e: Exception) {
-            //ignored
         }
     }
 
     suspend fun loadUsername() {
-        try {
+        logoutIfUnauthorized(history) {
             setUsername(ApiClient.getAccountInfo().username)
-        } catch (e: UnauthorizedException) {
-            history.replace("/")
-        } catch (e: Exception) {
-            //ignored
         }
     }
 
     suspend fun doDelete(file: FileResponse) {
-        try {
+        logoutIfUnauthorized(history) {
             ApiClient.deleteFile(file.link)
-        } catch (e: UnauthorizedException) {
-            history.replace("/")
-        } catch (e: Exception) {
-            //ignored
         }
     }
 

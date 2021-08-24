@@ -1,6 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
+import com.perpheads.files.logout
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
@@ -27,10 +28,10 @@ external interface NavBarProps : RProps {
 val NavBarComponent = fc<NavBarProps>("NavBarComponent") { props ->
     val history = useHistory()
 
-    fun logout() {
+    fun doLogout() {
         ApiClient.mainScope.launch {
             ApiClient.logout()
-            history.replace("/")
+            logout(history)
         }
     }
 
@@ -112,7 +113,7 @@ val NavBarComponent = fc<NavBarProps>("NavBarComponent") { props ->
                     li { routeLink("/change-password") { +"Change Password" } }
                     li {
                         a {
-                            attrs.onClick = { logout() }
+                            attrs.onClick = { doLogout() }
                             +"Logout"
                         }
                     }

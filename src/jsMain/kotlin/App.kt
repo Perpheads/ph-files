@@ -1,27 +1,30 @@
 package com.perpheads.files
 
-import com.perpheads.files.components.*
-import io.ktor.http.*
+import com.perpheads.files.components.accountPage
+import com.perpheads.files.components.apiKeyPage
+import com.perpheads.files.components.changePasswordPage
+import com.perpheads.files.components.loginPageComponent
 import kotlinx.browser.document
 import kotlinx.browser.window
-import kotlinx.css.Color
-import kotlinx.css.color
-import kotlinx.html.classes
-import kotlinx.html.js.onClickFunction
 import react.RProps
-import react.dom.button
 import react.dom.render
-import react.functionComponent
-import react.router.dom.hashRouter
-import react.router.dom.route
-import react.router.dom.switch
-import react.router.dom.useLocation
-import react.useState
-import styled.css
-import styled.styledDiv
+import react.router.dom.*
 
 external interface AccountProps : RProps {
     var page: Int
+}
+
+fun logout(history: History) {
+    window.localStorage.removeItem("loggedIn")
+    history.replace("/")
+}
+
+inline fun logoutIfUnauthorized(history: History, block: () -> Unit) {
+    try {
+        block()
+    } catch (e: ApiClient.UnauthorizedException) {
+        logout(history)
+    }
 }
 
 fun main() {
@@ -29,11 +32,6 @@ fun main() {
         render(document.getElementById("root")) {
             hashRouter {
                 switch {
-                    /*route<AccountProps>("/account/:page") { props ->
-                        accountPage {
-                            page = props.match.params.page
-                        }
-                    }*/
                     route("/account") {
                         accountPage {}
                     }
@@ -44,7 +42,11 @@ fun main() {
                         apiKeyPage()
                     }
                     route("/", exact = true) {
-                        loginPageComponent()
+                        if (window.localStorage.getItem("loggedIn") == "yes") {
+                            redirect(to = "/account")
+                        } else {
+                            loginPageComponent()
+                        }
                     }
                 }
             }

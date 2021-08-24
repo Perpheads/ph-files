@@ -1,6 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
+import com.perpheads.files.logoutIfUnauthorized
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -18,20 +19,16 @@ val ApiKeyComponent = fc<RProps>("ApiKeyComponent") {
 
     useEffectOnce {
         MainScope().launch {
-            try {
+            logoutIfUnauthorized(history) {
                 setApiKey(ApiClient.getApiKey().apiKey)
-            } catch (_: ApiClient.UnauthorizedException) {
-                history.replace("/")
             }
         }
     }
 
     fun generateApiKey() {
         MainScope().launch {
-            try {
+            logoutIfUnauthorized(history) {
                 setApiKey(ApiClient.generateApiKey().apiKey)
-            } catch (_: ApiClient.UnauthorizedException) {
-                history.replace("/")
             }
         }
     }

@@ -1,7 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
-import kotlinx.coroutines.MainScope
+import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.html.InputType
@@ -9,10 +9,11 @@ import kotlinx.html.js.onChangeFunction
 import org.w3c.dom.HTMLInputElement
 import react.*
 import react.dom.*
-import react.router.dom.redirect
-import react.router.dom.routeLink
 import react.router.dom.useHistory
-import styled.*
+import styled.css
+import styled.styledDiv
+import styled.styledImg
+import styled.styledInput
 
 external interface LoginCardComponentProps : RProps {
     var setError: StateSetter<String?>
@@ -27,6 +28,7 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
     useEffectOnce {
         ApiClient.mainScope.launch {
             if (ApiClient.getLoggedIn()) {
+                window.localStorage.setItem("loggedIn", "yes")
                 history.replace("/account")
             }
         }
@@ -39,6 +41,7 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
                 val response = ApiClient.authenticate(username, password, remember)
                 props.setError(response.error)
                 if (response.error == null) {
+                    window.localStorage.setItem("loggedIn", "yes")
                     history.replace("/account")
                 }
             } catch (e: Exception) {

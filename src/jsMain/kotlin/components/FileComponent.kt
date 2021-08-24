@@ -1,10 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.data.FileResponse
-import kotlinx.css.Cursor
-import kotlinx.css.cursor
-import kotlinx.css.px
-import kotlinx.css.width
+import kotlinx.css.*
 import kotlinx.html.js.onClickFunction
 import react.RBuilder
 import react.RProps
@@ -12,7 +9,7 @@ import react.dom.*
 import react.fc
 import styled.*
 
-external interface FileComponentProps: RProps {
+external interface FileComponentProps : RProps {
     var file: FileResponse
     var deleteFile: (FileResponse) -> Unit
 }
@@ -20,7 +17,14 @@ external interface FileComponentProps: RProps {
 val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
     val imgSrc = "/${props.file.fileId}/thumbnail"
     tr {
-        td { styledImg(src = imgSrc) { css { width = 48.px } } }
+        td {
+            styledImg(src = imgSrc) {
+                css {
+                    minWidth = 48.px
+                    maxWidth = 48.px
+                }
+            }
+        }
         td {
             a(href = "/${props.file.link}", target = "_blank") {
                 +props.file.fileName

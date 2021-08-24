@@ -1,6 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
+import com.perpheads.files.logout
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
@@ -31,7 +32,7 @@ val ChangePasswordComponent = fc<RProps>("ChangePasswordComponent") {
         } else {
             ApiClient.mainScope.launch {
                 ApiClient.changePassword(password, newPassword)
-                history.replace("/")
+                logout(history)
             }
         }
     }
