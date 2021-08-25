@@ -105,9 +105,6 @@ kotlin {
         }
 
         val kotlinWrappersVersion = "0.0.1-pre.237-kotlin-1.5.30"
-        fun kotlinw(target: String, version: String): String =
-            "org.jetbrains.kotlin-wrappers:kotlin-$target:$version-pre.237-kotlin-1.5.30"
-
 
         val jsMain by getting {
             languageSettings {
