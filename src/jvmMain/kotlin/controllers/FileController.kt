@@ -25,6 +25,8 @@ import org.apache.commons.codec.digest.DigestUtils
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.security.SecureRandom
 import java.time.Instant
@@ -145,15 +147,23 @@ fun Route.fileRoutes(
             fileMD5?.let {
                 call.response.etag(fileMD5)
             }
-            val contentType = if (file.mimeType.lowercase().contains("html")) {
+            var contentType = if (file.mimeType.lowercase().contains("html")) {
                 ContentType.Text.Plain
             } else ContentType.parse(file.mimeType)
+
+            if (contentType.match(ContentType.Text.Any)) {
+                contentType = contentType.withParameter("charset", "utf-8")
+            }
 
             val diskFile = getFile(file.fileId.toString())
             val fileContent = LocalFileContent(diskFile, contentType)
             call.response.header(
                 HttpHeaders.ContentDisposition,
                 ContentDisposition.Inline.withParameter(ContentDisposition.Parameters.FileName, file.fileName)
+                    .withParameter(
+                        ContentDisposition.Parameters.FileNameAsterisk,
+                        "utf-8''" + URLEncoder.encode(file.fileName, StandardCharsets.UTF_8)
+                    )
                     .toString()
             )
             call.respond(fileContent)
@@ -186,17 +196,19 @@ fun Route.fileRoutes(
                 throw BadRequestException("Invalid file upload request")
             }
             val file = upload(call.user().userId, firstPart)
-            call.respond(FileResponse(
-                fileId = file.fileId,
-                link = file.link,
-                fileName = file.fileName,
-                mimeType = file.mimeType,
-                uploadDate = file.uploadDate.toKotlinInstant(),
-                formattedUploadDate = dateFormatter.format(file.uploadDate),
-                size = file.size,
-                thumbnail = null,
-                hasThumbnail = file.thumbnail != null
-            ))
+            call.respond(
+                FileResponse(
+                    fileId = file.fileId,
+                    link = file.link,
+                    fileName = file.fileName,
+                    mimeType = file.mimeType,
+                    uploadDate = file.uploadDate.toKotlinInstant(),
+                    formattedUploadDate = dateFormatter.format(file.uploadDate),
+                    size = file.size,
+                    thumbnail = null,
+                    hasThumbnail = file.thumbnail != null
+                )
+            )
         }
 
         delete<FileRoute> { request ->
