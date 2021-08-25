@@ -4,8 +4,8 @@ import org.flywaydb.gradle.task.FlywayMigrateTask
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 plugins {
-    kotlin("multiplatform") version "1.5.21"
-    kotlin("plugin.serialization") version "1.5.21"
+    kotlin("multiplatform") version "1.5.30"
+    kotlin("plugin.serialization") version "1.5.30"
     id("org.flywaydb.flyway") version "7.14.0"
     id("nu.studer.jooq") version "6.0"
     id("com.bmuschko.docker-java-application") version "7.1.0"
@@ -77,7 +77,7 @@ kotlin {
 
         val jvmMain by getting {
             languageSettings {
-                useExperimentalAnnotation("io.ktor.locations.KtorExperimentalLocationsAPI")
+                optIn("io.ktor.locations.KtorExperimentalLocationsAPI")
             }
 
             dependencies {
@@ -104,23 +104,25 @@ kotlin {
             }
         }
 
+        val kotlinWrappersVersion = "0.0.1-pre.237-kotlin-1.5.30"
         fun kotlinw(target: String, version: String): String =
-            "org.jetbrains.kotlin-wrappers:kotlin-$target:$version-pre.233-kotlin-1.5.21"
+            "org.jetbrains.kotlin-wrappers:kotlin-$target:$version-pre.237-kotlin-1.5.30"
 
 
         val jsMain by getting {
             languageSettings {
-                useExperimentalAnnotation("kotlinx.serialization.ExperimentalSerializationApi")
+                optIn("kotlinx.serialization.ExperimentalSerializationApi")
             }
             dependencies {
+                implementation(kotlin("stdlib-common"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:${kotlinWrappersVersion}")
                 implementation("io.ktor:ktor-client-core:$ktor_version")
                 implementation("io.ktor:ktor-client-js:$ktor_version")
                 implementation("io.ktor:ktor-client-serialization:$ktor_version")
-                implementation(kotlin("stdlib-common"))
-                implementation(kotlinw("react", "17.0.2"))
-                implementation(kotlinw("react-dom", "17.0.2"))
-                implementation(kotlinw("styled", "5.3.0"))
-                implementation(kotlinw("react-router-dom", "5.2.0"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-styled")
             }
         }
     }
