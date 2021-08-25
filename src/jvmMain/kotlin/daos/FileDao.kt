@@ -65,10 +65,11 @@ class FileDao(
             condition = condition.and(FILES.FILE_ID.lt(beforeId))
         }
         if (searchStr != null) {
-            condition = condition.and(
+            condition = condition.and(FILES.FILE_NAME.likeIgnoreCase("%" + searchStr.replace("%", "!%") + "%", '!'))
+            /*condition = condition.and(
                 "MATCH(?) AGAINST(CONCAT('*', ?, '*') IN BOOLEAN MODE)",
                 FILES.FILE_NAME, searchStr
-            )
+            )*/
         }
 
         val query = create.select()
