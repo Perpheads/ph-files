@@ -1,8 +1,8 @@
 package com.perpheads.files.components
 
 import kotlinx.css.*
+import react.Props
 import react.RBuilder
-import react.RProps
 import react.dom.*
 import react.fc
 import styled.css
@@ -13,7 +13,7 @@ data class UploadQueueEntry(
     val fileName: String,
     var progress: Double
 )
-external interface UploadQueueEntryProps: RProps {
+external interface UploadQueueEntryProps: Props {
     var entry: UploadQueueEntry
 }
 
@@ -35,7 +35,7 @@ fun RBuilder.uploadQueueEntry(handler: UploadQueueEntryProps.() -> Unit) = child
     attrs { handler() }
 }
 
-external interface UploadQueueProps: RProps {
+external interface UploadQueueProps: Props {
     var entries: List<UploadQueueEntry>
 }
 

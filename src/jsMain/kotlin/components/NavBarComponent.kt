@@ -18,14 +18,14 @@ import react.router.dom.routeLink
 import react.router.dom.useHistory
 import styled.*
 
-external interface NavBarProps : RProps {
+external interface NavBaProps : Props {
     var message: String
     var search: String
     var showSearchBar: Boolean
     var onSearchChanged: (String) -> Unit
 }
 
-val NavBarComponent = fc<NavBarProps>("NavBarComponent") { props ->
+val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
     val history = useHistory()
 
     fun doLogout() {
@@ -123,6 +123,6 @@ val NavBarComponent = fc<NavBarProps>("NavBarComponent") { props ->
     }
 }
 
-fun RBuilder.navBar(handler: NavBarProps.() -> Unit) = child(NavBarComponent) {
+fun RBuilder.navBar(handler: NavBaProps.() -> Unit) = child(NavBarComponent) {
     attrs { handler() }
 }

@@ -6,11 +6,11 @@ import com.perpheads.files.components.changePasswordPage
 import com.perpheads.files.components.loginPageComponent
 import kotlinx.browser.document
 import kotlinx.browser.window
-import react.RProps
+import react.Props
 import react.dom.render
 import react.router.dom.*
 
-external interface AccountProps : RProps {
+external interface AccountProps : Props {
     var page: Int
 }
 

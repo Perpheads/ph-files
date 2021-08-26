@@ -8,14 +8,14 @@ import kotlinx.css.*
 import kotlinx.html.InputType
 import org.w3c.dom.HTMLInputElement
 import react.RBuilder
-import react.RProps
+import react.Props
 import react.dom.*
 import react.fc
 import react.router.dom.useHistory
 import react.useState
 import styled.*
 
-val ChangePasswordComponent = fc<RProps>("ChangePasswordComponent") {
+val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
     val history = useHistory()
     val (password, setPassword) = useState("")
     val (newPassword, setNewPassword) = useState("")

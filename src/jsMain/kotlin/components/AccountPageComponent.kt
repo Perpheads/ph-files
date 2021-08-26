@@ -20,7 +20,7 @@ import react.router.dom.useLocation
 import styled.css
 import styled.styledDiv
 
-external interface AccountPageProps : RProps {
+external interface AccountPageProps : Props {
 }
 
 private fun <T> List<T>.prepend(elem: T): List<T> {

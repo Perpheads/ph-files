@@ -15,7 +15,7 @@ import styled.styledDiv
 import styled.styledImg
 import styled.styledInput
 
-external interface LoginCardComponentProps : RProps {
+external interface LoginCardComponentProps : Props {
     var setError: StateSetter<String?>
 }
 
@@ -105,7 +105,7 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
 }
 
 
-val LoginPageComponent = functionComponent<RProps>("LoginComponent") { _ ->
+val LoginPageComponent = functionComponent<Props>("LoginComponent") { _ ->
     val (error, errorSet) = useState<String?>(null)
     div {
         div("center-align") {

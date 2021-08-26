@@ -4,12 +4,12 @@ import com.perpheads.files.data.FileResponse
 import kotlinx.css.*
 import kotlinx.html.js.onClickFunction
 import react.RBuilder
-import react.RProps
+import react.Props
 import react.dom.*
 import react.fc
 import styled.*
 
-external interface FileComponentProps : RProps {
+external interface FileComponentProps : Props {
     var file: FileResponse
     var deleteFile: (FileResponse) -> Unit
 }

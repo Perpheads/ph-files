@@ -2,12 +2,12 @@ package com.perpheads.files.components
 
 import com.perpheads.files.data.FileResponse
 import react.RBuilder
-import react.RProps
+import react.Props
 import react.StateSetter
 import react.dom.*
 import react.fc
 
-external interface FileListComponentProps : RProps {
+external interface FileListComponentProps : Props {
     var files: List<FileResponse>
     var deleteFile: (FileResponse) -> Unit
 }

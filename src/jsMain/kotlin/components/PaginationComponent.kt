@@ -1,12 +1,12 @@
 package com.perpheads.files.components
 
 import react.RBuilder
-import react.RProps
+import react.Props
 import react.dom.*
 import react.fc
 
 
-external interface PaginationArrowComponentProps : RProps {
+external interface PaginationArrowComponentProps : Props {
     var enabled: Boolean
     var left: Boolean
     var destinationPage: Int
@@ -40,7 +40,7 @@ data class PaginationData(
     val pageEnd: Int
 )
 
-external interface PaginationComponentProps : RProps {
+external interface PaginationComponentProps : Props {
     var paginationData: PaginationData
     var onPageChange: (Int) -> Unit
 }

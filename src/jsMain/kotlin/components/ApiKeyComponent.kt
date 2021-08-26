@@ -13,7 +13,7 @@ import react.dom.div
 import react.router.dom.useHistory
 import styled.*
 
-val ApiKeyComponent = fc<RProps>("ApiKeyComponent") {
+val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
     val (apiKey, setApiKey) = useState("Loading")
     val history = useHistory()
 
