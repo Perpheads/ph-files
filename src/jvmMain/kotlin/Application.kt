@@ -41,21 +41,7 @@ fun Application.module(testing: Boolean = false) {
 
     val phConfig = koin.get<PhFilesConfig>()
 
-    install(DataConversion) {
-        convert<Instant> {
-            decode { values, _ ->
-                val first = values.firstOrNull() ?: return@decode null
-                Instant.parse(first)
-            }
-            encode { value ->
-                when (value) {
-                    null -> listOf()
-                    is Instant -> listOf(value.toString())
-                    else -> throw DataConversionException("Cannot convert $value as Instant")
-                }
-            }
-        }
-    }
+    install(DataConversion) { }
 
     val staticCachingOptions = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 604800))
     install(CachingHeaders) {
