@@ -47,6 +47,7 @@ fun Application.module(testing: Boolean = false) {
     install(CachingHeaders) {
         options { outgoingContent ->
             when (outgoingContent.contentType?.withoutParameters()) {
+                ContentType.Application.JavaScript -> staticCachingOptions
                 ContentType.Text.JavaScript -> staticCachingOptions
                 ContentType.Text.Html -> staticCachingOptions
                 ContentType.Image.PNG -> staticCachingOptions
