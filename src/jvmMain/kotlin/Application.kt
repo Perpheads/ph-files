@@ -19,6 +19,8 @@ import kotlinx.serialization.json.Json
 import org.flywaydb.core.Flyway
 import org.koin.core.context.startKoin
 import org.slf4j.event.Level
+import java.nio.file.attribute.FileTime
+import java.util.concurrent.TimeUnit
 
 
 fun main(args: Array<String>): Unit =
@@ -53,6 +55,16 @@ fun Application.module(testing: Boolean = false) {
                 ContentType.Image.PNG -> staticCachingOptions
                 ContentType.Image.XIcon -> staticCachingOptions
                 else -> null
+            }
+        }
+    }
+
+    install(ConditionalHeaders) {
+        version {
+            if (it is LocalFileContent) {
+                listOf(LastModifiedVersion(FileTime.from(it.file.lastModified(), TimeUnit.MILLISECONDS)))
+            } else {
+                emptyList()
             }
         }
     }
