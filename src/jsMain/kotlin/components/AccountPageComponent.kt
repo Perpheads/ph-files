@@ -2,9 +2,10 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.ApiClient.uploadFile
+import com.perpheads.files.Parameters
 import com.perpheads.files.data.FileResponse
 import com.perpheads.files.logoutIfUnauthorized
-import io.ktor.http.*
+import com.perpheads.files.parseQueryString
 import kotlinx.browser.document
 import kotlinx.coroutines.launch
 import kotlinx.css.*
@@ -47,7 +48,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
             if (newSearch.isNotBlank()) {
                 set("search", newSearch)
             }
-        }.formUrlEncode()
+        }
         history.push("/account?${params}")
     }
 

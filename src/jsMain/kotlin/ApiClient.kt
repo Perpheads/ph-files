@@ -1,23 +1,14 @@
 package com.perpheads.files
 
 import com.perpheads.files.data.*
-import io.ktor.client.*
-import io.ktor.client.engine.js.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.request.*
-import io.ktor.http.*
+import com.perpheads.files.wrappers.axios
+import com.perpheads.files.wrappers.axiosDelete
+import com.perpheads.files.wrappers.axiosGet
+import com.perpheads.files.wrappers.axiosPost
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.await
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromDynamic
-import org.w3c.fetch.INCLUDE
-import org.w3c.fetch.RequestCredentials
-import org.w3c.fetch.RequestInit
 import org.w3c.files.File
 import org.w3c.xhr.FormData
 import org.w3c.xhr.XMLHttpRequest
@@ -29,22 +20,8 @@ object ApiClient {
     val mainScope = MainScope()
 
     object UnauthorizedException : Exception()
-
-    private val client = HttpClient(Js) {
-        install(JsonFeature) {
-            serializer = KotlinxSerializer()
-        }
-
-        HttpResponseValidator {
-            handleResponseException { exception ->
-                if (exception !is ClientRequestException) return@handleResponseException
-                val exceptionResponse = exception.response
-                if (exceptionResponse.status == HttpStatusCode.Unauthorized) {
-                    throw UnauthorizedException
-                }
-            }
-        }
-    }
+    object NotFoundException : Exception()
+    data class UnexpectedHttpStatusException(val status: Int): Exception()
 
     suspend fun loadFiles(
         query: String = "",
@@ -52,16 +29,17 @@ object ApiClient {
         page: Int? = null,
         entriesPerPage: Int = 9
     ): FileListResponse {
-        return client.post(window.location.origin + "/account") {
-            parameter("include_thumbnails", false)
-            contentType(ContentType.Application.Json)
-            body = SearchRequest(
-                query = query,
-                beforeId = beforeId,
-                page = page,
-                entriesPerPage = entriesPerPage
-            )
+        axios.create()
+        val request = SearchRequest(
+            query = query,
+            beforeId = beforeId,
+            page = page,
+            entriesPerPage = entriesPerPage
+        )
+        val result =  axiosPost<FileListResponse, SearchRequest>("/account", request) {
+            parameter("include_thumbnails", "false")
         }
+        return result
     }
 
     suspend fun getLoggedIn(): Boolean {
@@ -74,35 +52,31 @@ object ApiClient {
     }
 
     suspend fun deleteFile(link: String) {
-        return client.delete(window.location.origin + "/${link}")
+        return axiosDelete("/${link}")
     }
 
     suspend fun getAccountInfo(): AccountInfo {
-        return client.get(window.location.origin + "/account-info")
+        return axiosGet("/account-info")
     }
 
     suspend fun getApiKey(): ApiKeyResponse {
-        return client.get(window.location.origin + "/api-key")
+        return axiosGet("/api-key")
     }
 
     suspend fun generateApiKey(): ApiKeyResponse {
-        return client.post(window.location.origin + "/generate-api-key")
+        return axiosPost("/generate-api-key")
     }
 
     suspend fun authenticate(username: String, password: String, remember: Boolean): LoginResponse {
-        return client.post(window.location.origin + "/auth") {
-            contentType(ContentType.Application.Json)
-            body = LoginRequest(username, password, remember)
-        }
+        val body = LoginRequest(username, password, remember)
+        return axiosPost("/auth", body)
     }
 
-    suspend fun logout() = client.post<Unit>(window.location.origin + "/logout")
+    suspend fun logout() = axiosPost<Unit>("/logout")
 
     suspend fun changePassword(existingPassword: String, newPassword: String) {
-        return client.post(window.location.origin + "/change-password") {
-            contentType(ContentType.Application.Json)
-            body = ChangePasswordRequest(existingPassword, newPassword)
-        }
+        val body = ChangePasswordRequest(existingPassword, newPassword)
+        return axiosPost("/change-password", body)
     }
 
     suspend fun uploadFile(file: File, onProgress: (Double) -> Unit): FileResponse {

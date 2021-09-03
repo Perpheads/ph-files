@@ -112,10 +112,9 @@ kotlin {
             }
             dependencies {
                 implementation(kotlin("stdlib-common"))
+                implementation(npm("axios", "0.21.1"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:${kotlinWrappersVersion}")
-                implementation("io.ktor:ktor-client-core:$ktor_version")
-                implementation("io.ktor:ktor-client-js:$ktor_version")
-                implementation("io.ktor:ktor-client-serialization:$ktor_version")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom")

@@ -14,13 +14,13 @@ import react.router.dom.useHistory
 import styled.*
 
 val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
-    val (apiKey, setApiKey) = useState("Loading")
+    var apiKey by useState("Loading")
     val history = useHistory()
 
     useEffectOnce {
         MainScope().launch {
             logoutIfUnauthorized(history) {
-                setApiKey(ApiClient.getApiKey().apiKey)
+                apiKey = ApiClient.getApiKey().apiKey
             }
         }
     }
@@ -28,7 +28,7 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
     fun generateApiKey() {
         MainScope().launch {
             logoutIfUnauthorized(history) {
-                setApiKey(ApiClient.generateApiKey().apiKey)
+                apiKey = ApiClient.generateApiKey().apiKey
             }
         }
     }
