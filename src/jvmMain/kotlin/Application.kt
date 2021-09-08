@@ -43,6 +43,7 @@ fun Application.module(testing: Boolean = false) {
 
     val phConfig = koin.get<PhFilesConfig>()
 
+    install(AutoHeadResponse)
     install(DataConversion) { }
 
     val staticCachingOptions = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 604800))
