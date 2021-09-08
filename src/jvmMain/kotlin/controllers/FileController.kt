@@ -155,16 +155,20 @@ fun Route.fileRoutes(
                 contentType = contentType.withParameter("charset", "utf-8")
             }
 
+            var dispositionHeader =
+                ContentDisposition.Inline.withParameter(ContentDisposition.Parameters.FileName, file.fileName)
+            if (!contentType.match(ContentType.Image.Any)) {
+                dispositionHeader = dispositionHeader.withParameter(
+                    ContentDisposition.Parameters.FileNameAsterisk,
+                    "utf-8''" + URLEncoder.encode(file.fileName, StandardCharsets.UTF_8)
+                )
+            }
+
             val diskFile = getFile(file.fileId.toString())
             val fileContent = LocalFileContent(diskFile, contentType)
             call.response.header(
                 HttpHeaders.ContentDisposition,
-                ContentDisposition.Inline.withParameter(ContentDisposition.Parameters.FileName, file.fileName)
-                    .withParameter(
-                        ContentDisposition.Parameters.FileNameAsterisk,
-                        "utf-8''" + URLEncoder.encode(file.fileName, StandardCharsets.UTF_8)
-                    )
-                    .toString()
+                dispositionHeader.toString()
             )
             call.respond(fileContent)
         }

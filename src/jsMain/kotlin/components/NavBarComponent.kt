@@ -30,7 +30,11 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
 
     fun doLogout() {
         ApiClient.mainScope.launch {
-            ApiClient.logout()
+            try {
+                ApiClient.logout()
+            } catch (e: Exception) {
+
+            }
             logout(history)
         }
     }

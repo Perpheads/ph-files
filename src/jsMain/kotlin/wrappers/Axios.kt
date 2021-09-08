@@ -153,6 +153,16 @@ external interface AxiosResponse<T> {
         set(value) = definedExternally
 }
 
+external interface AxiosError {
+    var status: Number
+    var statusText: String
+    var headers: Any
+    var config: AxiosRequestConfig
+    var request: Any?
+        get() = definedExternally
+        set(value) = definedExternally
+}
+
 external interface AxiosResponse__0 : AxiosResponse<Any>
 
 external interface AxiosPromise<T> : Promise<AxiosResponse<T>>
