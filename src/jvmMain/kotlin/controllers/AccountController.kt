@@ -120,7 +120,11 @@ fun Route.accountRoutes(
                     userDao.changePassword(call.user().userId, request.newPassword)
                     cookieDao.deleteAllByUser(call.user().userId)
                 }
-                call.response.cookies.appendExpired("id")
+                call.response.cookies.appendExpired(
+                    name ="id",
+                    path = "/",
+                    domain = cookieConfig.domain
+                )
                 call.respondText("")
             }
         }

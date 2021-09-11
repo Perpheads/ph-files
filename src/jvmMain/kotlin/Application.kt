@@ -116,7 +116,11 @@ fun Application.module(testing: Boolean = false) {
             call.respond(message = cause.content, status = HttpStatusCode.Forbidden)
         }
         exception<UnauthorizedException> { cause ->
-            call.response.cookies.appendExpired("id")
+            call.response.cookies.appendExpired(
+                name ="id",
+                path = "/",
+                domain = phConfig.cookie.domain
+            )
             call.respond(message = cause.content, status = HttpStatusCode.Unauthorized)
         }
         exception<BadRequestException> { cause ->

@@ -27,16 +27,6 @@ inline fun <reified U> generateConfig(ct: CancelToken? = null) = object : AxiosR
     )
 
     override var transformResponse: (String) -> String = { it }
-
-    /*
-    val response = if (U::class == Unit::class) {
-        Unit as U
-    } else if (it is U) {
-        it
-    } else {
-        Json.decodeFromString<U>(it)
-    }
-    response*/
 }
 
 class AxiosConfigScope(private val config: AxiosRequestConfig) {
