@@ -2,20 +2,19 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.logout
-import kotlinx.browser.document
-import kotlinx.browser.window
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.html.InputType
 import kotlinx.html.id
 import kotlinx.html.js.onChangeFunction
 import org.w3c.dom.HTMLInputElement
-import react.*
+import react.Props
+import react.RBuilder
 import react.dom.*
-import react.router.dom.redirect
-import react.router.dom.routeLink
-import react.router.dom.useHistory
+import react.fc
+import react.router.dom.Link
+import react.router.useNavigate
+import react.useEffectOnce
 import styled.*
 
 external interface NavBaProps : Props {
@@ -26,7 +25,7 @@ external interface NavBaProps : Props {
 }
 
 val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
-    val history = useHistory()
+    val navigate = useNavigate()
 
     fun doLogout() {
         ApiClient.mainScope.launch {
@@ -35,7 +34,7 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
             } catch (e: Exception) {
 
             }
-            logout(history)
+            logout(navigate)
         }
     }
 
@@ -112,9 +111,24 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
                         marginTop = 67.px
                     }
                     attrs.id = "accountMenu"
-                    li { routeLink("/account") { +"Files" } }
-                    li { routeLink("/api-key") { +"Get API Key" } }
-                    li { routeLink("/change-password") { +"Change Password" } }
+                    li {
+                        Link {
+                            attrs.to = "/account"
+                            +"Files"
+                        }
+                    }
+                    li {
+                        Link {
+                            attrs.to = "/api-key"
+                            +"Get API Key"
+                        }
+                    }
+                    li {
+                        Link {
+                            attrs.to = "/change-password"
+                            +"Change Password"
+                        }
+                    }
                     li {
                         a {
                             attrs.onClick = { doLogout() }

@@ -2,21 +2,20 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.logout
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.html.InputType
 import org.w3c.dom.HTMLInputElement
-import react.RBuilder
 import react.Props
 import react.dom.*
+import react.dom.events.KeyboardEventHandler
 import react.fc
-import react.router.dom.useHistory
+import react.router.useNavigate
 import react.useState
 import styled.*
 
 val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
-    val history = useHistory()
+    val navigate = useNavigate()
     val (password, setPassword) = useState("")
     val (newPassword, setNewPassword) = useState("")
     val (repeatNewPassword, setRepeatNewPassword) = useState("")
@@ -32,7 +31,7 @@ val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
         } else {
             ApiClient.mainScope.launch {
                 ApiClient.changePassword(password, newPassword)
-                logout(history)
+                logout(navigate)
             }
         }
     }
@@ -128,5 +127,3 @@ val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
         }
     }
 }
-
-fun RBuilder.changePasswordPage() = child(ChangePasswordComponent)

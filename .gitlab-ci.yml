@@ -21,10 +21,10 @@ stages:
 build:
   stage: build
   image: gradle:jdk11
-  script: gradle build :dockerCreateDockerfile
+  script: gradle build :server:dockerCreateDockerfile
   artifacts:
     paths:
-      - build/docker
+      - server/build/docker
     expire_in: 1 week
 
 build_image:
@@ -36,7 +36,7 @@ build_image:
     - docker:dind
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - cd build/docker
+    - cd server/build/docker
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
   rules:

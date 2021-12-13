@@ -14,12 +14,12 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.util.*
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import org.flywaydb.core.Flyway
 import org.koin.core.context.startKoin
 import org.slf4j.event.Level
 import java.nio.file.attribute.FileTime
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 
@@ -152,13 +152,14 @@ fun Application.module(testing: Boolean = false) {
         accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao)
         fileRoutes(fileDao, phConfig)
         static("/") {
-            resource("ph-files.js")
             defaultResource("index.html")
             resource("favicon.ico")
             resource("favicon.png")
             resource("index.html")
             resource("logo.png")
             resource("thumbnail.png")
+            resource("client.js")
+            resource("client.js.map")
         }
     }
 

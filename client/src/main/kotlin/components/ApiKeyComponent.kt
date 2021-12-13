@@ -2,24 +2,28 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.logoutIfUnauthorized
-import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.html.js.onClickFunction
-import react.*
+import react.Props
 import react.dom.button
 import react.dom.div
-import react.router.dom.useHistory
-import styled.*
+import react.fc
+import react.router.useNavigate
+import react.useEffectOnce
+import react.useState
+import styled.css
+import styled.styledDiv
+import styled.styledP
 
 val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
     var apiKey by useState("Loading")
-    val history = useHistory()
+    val navigate = useNavigate()
 
     useEffectOnce {
         MainScope().launch {
-            logoutIfUnauthorized(history) {
+            logoutIfUnauthorized(navigate) {
                 apiKey = ApiClient.getApiKey().apiKey
             }
         }
@@ -27,7 +31,7 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
 
     fun generateApiKey() {
         MainScope().launch {
-            logoutIfUnauthorized(history) {
+            logoutIfUnauthorized(navigate) {
                 apiKey = ApiClient.generateApiKey().apiKey
             }
         }
@@ -68,5 +72,3 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
         }
     }
 }
-
-fun RBuilder.apiKeyPage() = child(ApiKeyComponent)

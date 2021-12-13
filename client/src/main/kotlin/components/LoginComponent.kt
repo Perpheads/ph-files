@@ -1,6 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
+import com.perpheads.files.replace
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import kotlinx.css.*
@@ -9,7 +10,9 @@ import kotlinx.html.js.onChangeFunction
 import org.w3c.dom.HTMLInputElement
 import react.*
 import react.dom.*
-import react.router.dom.useHistory
+import react.dom.events.KeyboardEventHandler
+import react.router.Navigate
+import react.router.useNavigate
 import styled.css
 import styled.styledDiv
 import styled.styledImg
@@ -23,13 +26,13 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
     val (username, setUsername) = useState("")
     val (password, setPassword) = useState("")
     val (remember, setRemember) = useState(false)
-    val history = useHistory()
+    val navigate = useNavigate()
 
     useEffectOnce {
         ApiClient.mainScope.launch {
             if (ApiClient.getLoggedIn()) {
                 window.localStorage.setItem("loggedIn", "yes")
-                history.replace("/account")
+                navigate.replace("/account")
             }
         }
     }
@@ -42,7 +45,7 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
                 props.setError(response.error)
                 if (response.error == null) {
                     window.localStorage.setItem("loggedIn", "yes")
-                    history.replace("/account")
+                    navigate.replace("/account")
                 }
             } catch (e: Exception) {
                 props.setError("An unknown error occurred")
@@ -107,6 +110,11 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
 
 val LoginPageComponent = functionComponent<Props>("LoginComponent") { _ ->
     val (error, errorSet) = useState<String?>(null)
+    if (window.localStorage.getItem("loggedIn") == "yes") {
+        Navigate {
+            attrs.to = "/account"
+        }
+    }
     div {
         div("center-align") {
             styledImg(src = "/logo.png") {
@@ -133,5 +141,3 @@ val LoginPageComponent = functionComponent<Props>("LoginComponent") { _ ->
 fun RBuilder.loginCardComponent(handler: LoginCardComponentProps.() -> Unit) = child(LoginCardComponent) {
     attrs { handler() }
 }
-
-fun RBuilder.loginPageComponent() = child(LoginPageComponent)

@@ -16,8 +16,8 @@ import org.w3c.dom.asList
 import org.w3c.files.File
 import react.*
 import react.dom.*
-import react.router.dom.useHistory
-import react.router.dom.useLocation
+import react.router.useLocation
+import react.router.useNavigate
 import styled.css
 import styled.styledDiv
 
@@ -33,7 +33,7 @@ private fun <T> List<T>.prepend(elem: T): List<T> {
 val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props ->
     val location = useLocation()
     val parameters = parseQueryString(location.search.drop(1))
-    val history = useHistory()
+    val navigate = useNavigate()
     val page = parameters["page"]?.toIntOrNull() ?: 1
     val search = parameters["search"] ?: ""
 
@@ -49,7 +49,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
                 set("search", newSearch)
             }
         }
-        history.push("/account?${params}")
+        navigate("/account?${params}")
     }
 
     fun doUploadFile(file: File) {
@@ -67,7 +67,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
     }
 
     suspend fun loadFiles() {
-        logoutIfUnauthorized(history) {
+        logoutIfUnauthorized(navigate) {
             val response = ApiClient.loadFiles(query = search, page = page)
             setPaginationData(
                 PaginationData(
@@ -82,13 +82,13 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
     }
 
     suspend fun loadUsername() {
-        logoutIfUnauthorized(history) {
+        logoutIfUnauthorized(navigate) {
             setUsername(ApiClient.getAccountInfo().username)
         }
     }
 
     suspend fun doDelete(file: FileResponse) {
-        logoutIfUnauthorized(history) {
+        logoutIfUnauthorized(navigate) {
             ApiClient.deleteFile(file.link)
         }
     }
@@ -191,8 +191,4 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props 
             }
         }
     }
-}
-
-fun RBuilder.accountPage(handler: AccountPageProps.() -> Unit) = child(AccountPageComponent) {
-    attrs { handler() }
 }
