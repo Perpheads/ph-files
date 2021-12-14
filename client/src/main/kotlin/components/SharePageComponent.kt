@@ -9,15 +9,13 @@ import kotlinx.css.*
 import org.w3c.files.File
 import org.w3c.files.get
 import react.Props
-import react.dom.div
-import react.dom.onClick
-import react.dom.onDragOver
-import react.dom.onDrop
+import react.dom.*
 import react.fc
 import react.router.useNavigate
 import react.useEffectOnce
 import react.useState
 import styled.*
+import kotlin.math.roundToInt
 
 val ShareComponent = fc<Props>("ShareComponent") {
     val navigate = useNavigate()
@@ -27,7 +25,7 @@ val ShareComponent = fc<Props>("ShareComponent") {
     var createdLink by useState<String>()
     var webSocketSender by useState<WebSocketSender>()
     var completed by useState(false)
-    var error by useState(false)
+    var error by useState<String>()
 
     useEffectOnce {
         MainScope().launch {
@@ -45,7 +43,7 @@ val ShareComponent = fc<Props>("ShareComponent") {
         }
         sender.onProgress = { downloadProgress = it }
         sender.onCompleted = { completed = true }
-        sender.onError = { error = true }
+        sender.onError = { error = it }
 
         webSocketSender = sender
         sender.open()
@@ -68,23 +66,34 @@ val ShareComponent = fc<Props>("ShareComponent") {
                     paddingLeft = 10.px
                 }
                 div("col l4 center-align") {
-                    styledDiv {
-                        css {
-                            minHeight = 200.px
-                        }
-                        +"Drop a File here"
-                        this.attrs.onDragOver = {
-                            it.preventDefault()
-                        }
-                        this.attrs.onDrop = {
-                            it.preventDefault()
-                            if (dropEnabled) {
-                                droppedFile = it.dataTransfer.files[0]
+                    error?.let {
+                        styledDiv {
+                            css {
+                                color = Color.red
                             }
+                            +"Error: $it"
                         }
                     }
                     val currentLink = createdLink
                     val currentProgress = downloadProgress
+                    val file = droppedFile
+                    if (currentLink == null) {
+                        styledDiv {
+                            css {
+                                minHeight = 200.px
+                            }
+                            +"Drop a File here"
+                            this.attrs.onDragOver = {
+                                it.preventDefault()
+                            }
+                            this.attrs.onDrop = {
+                                it.preventDefault()
+                                if (dropEnabled) {
+                                    droppedFile = it.dataTransfer.files[0]
+                                }
+                            }
+                        }
+                    }
                     if (dropEnabled) {
                         styledButton {
                             css {
@@ -94,7 +103,6 @@ val ShareComponent = fc<Props>("ShareComponent") {
                                 }
                             }
                             attrs.onClick = {
-                                val file = droppedFile
                                 if (file != null && dropEnabled) {
                                     dropEnabled = false
                                     createSender(file)
@@ -105,14 +113,40 @@ val ShareComponent = fc<Props>("ShareComponent") {
                             +"Create Link"
                         }
                     } else if (currentLink != null && currentProgress == null) {
-                        styledInput {
-                            attrs.disabled = true
-                            css {
+                        div {
+                            p {
+                                +"Send this link to whoever should download this file."
                             }
-                            attrs.value = currentLink
+                            styledInput {
+                                attrs.disabled = true
+                                css {
+                                }
+                                attrs.value = currentLink
+                            }
                         }
-                    } else if (currentProgress != null) {
-                        //TODO:
+                    }
+                    if (currentProgress != null && file != null) {
+                        div {
+                            p {
+                                +"File upload in progress"
+                            }
+                            p {
+                                +"Note: This window needs to stay open for the file transfer to complete."
+                            }
+                            div("progress") {
+                                styledDiv {
+                                    css {
+                                        classes += "determinate"
+                                        width = (currentProgress.toDouble() * 100 / file.size.toDouble()).pct
+                                    }
+                                }
+                            }
+                        }
+                        if (completed) {
+                            p {
+                                +"Upload Completed!"
+                            }
+                        }
                     }
                 }
             }

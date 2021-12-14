@@ -6,13 +6,10 @@ import data.ShareFileResponse
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
-import react.Props
+import react.*
 import react.dom.div
 import react.dom.onClick
-import react.fc
 import react.router.useParams
-import react.useEffectOnce
-import react.useState
 import styled.css
 import styled.styledA
 import styled.styledButton
@@ -26,8 +23,9 @@ val ShareDownloadComponent = fc<Props>("ShareDownloadComponent") {
     var fileResponse by useState<ShareFileResponse>()
     var downloading by useState(false)
 
-    useEffectOnce {
+    useEffect(param) {
         MainScope().launch {
+            downloading = false
             fileResponse = ApiClient.getSharedFileInformation(token)
         }
     }

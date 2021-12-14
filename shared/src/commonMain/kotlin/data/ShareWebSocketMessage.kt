@@ -16,6 +16,10 @@ data class PullMessage(val count: Int): ShareWebSocketMessage()
 data class LinkMessage(val link: String): ShareWebSocketMessage()
 
 @Serializable
+@SerialName("error")
+data class ErrorMessage(val error: String): ShareWebSocketMessage()
+
+@Serializable
 data class AnnounceMessage(val fileName: String, val size: Long)
 
 @Serializable

@@ -21,6 +21,8 @@ class WebSocketSender(private val path: String, private val file: File) {
     var onClosed: () -> Unit = {}
     var onLinkCreated: (String) -> Unit = {}
 
+    var finalCallbackCalled = false
+
     fun close() {
         socket.close()
         sendJob?.cancel()
@@ -30,17 +32,21 @@ class WebSocketSender(private val path: String, private val file: File) {
     private fun startSending() {
         onProgress(0)
         sendJob = MainScope().launch {
-            var sent = 0
-            while (sent < file.size.toInt()) {
+            var sent = 0.0
+            while (sent < file.size.toDouble()) {
                 tokenChannel.receive()
-                val end = (sent + chunkSize).coerceAtMost(file.size.toInt())
-                socket.send(file.slice(sent, end))
+                val end = (sent + chunkSize).coerceAtMost(file.size.toDouble())
+                socket.send(file.slice(sent.unsafeCast<Int>(), end.unsafeCast<Int>()))
                 sent = end
-                onProgress(sent.toLong())
+                if (!finalCallbackCalled) {
+                    onProgress(sent.toLong())
+                }
             }
             socket.send(Json.encodeToString<ShareWebSocketMessage>(CompletedMessage))
-            onCompleted()
-            close()
+            if (!finalCallbackCalled) {
+                finalCallbackCalled = true
+                onCompleted()
+            }
         }
     }
 
@@ -56,28 +62,41 @@ class WebSocketSender(private val path: String, private val file: File) {
             socket.send(Json.encodeToString(AnnounceMessage(file.name, file.size.toLong())))
         }
         socket.onerror = {
-            console.log("An error occurred")
-            onError("An error occurred")
+            if (!finalCallbackCalled) {
+                finalCallbackCalled = true
+                onError("An unknown error occurred")
+            }
         }
         socket.onmessage = {
-            console.log("Received data: ${it.data}")
             when (val message = Json.decodeFromString<ShareWebSocketMessage>(it.data as String)) {
                 is PullMessage -> {
                     for (i in 1..message.count) {
-                        tokenChannel.trySend(Unit)
+                        MainScope().launch {
+                            tokenChannel.trySend(Unit)
+                        }
                     }
                     if (sendJob == null) {
                         startSending()
                     }
                 }
+                is ErrorMessage -> {
+                    if (!finalCallbackCalled) {
+                        finalCallbackCalled = true
+                        onError(message.error)
+                    }
+                }
                 is LinkMessage -> {
-                    onLinkCreated(message.link)
+                    if (!finalCallbackCalled) {
+                        onLinkCreated(message.link)
+                    }
                 }
             }
         }
         socket.onclose = {
-            console.log("WebSocket closed")
-            onClosed()
+            if (!finalCallbackCalled) {
+                finalCallbackCalled = true
+                onClosed()
+            }
         }
     }
 }

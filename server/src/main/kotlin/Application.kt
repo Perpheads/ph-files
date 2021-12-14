@@ -63,22 +63,12 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
-    install(ConditionalHeaders) {
-        version {
-            if (it is LocalFileContent) {
-                listOf(LastModifiedVersion(FileTime.from(it.file.lastModified(), TimeUnit.MILLISECONDS)))
-            } else {
-                emptyList()
-            }
-        }
-    }
-
     install(PartialContent) {
 
     }
 
     install(ContentNegotiation) {
-        json(Json { })
+        json(Json)
     }
     install(Compression) {
         gzip()
@@ -94,7 +84,7 @@ fun Application.module(testing: Boolean = false) {
         header(HttpHeaders.ContentType)
         header(HttpHeaders.ContentLength)
         header(HttpHeaders.ContentEncoding)
-        allowCredentials = true
+        //allowCredentials = true
         if (phConfig.cors.anyHost) {
             anyHost()
         } else {
