@@ -5,6 +5,7 @@ import com.perpheads.files.wrappers.axios
 import com.perpheads.files.wrappers.axiosDelete
 import com.perpheads.files.wrappers.axiosGet
 import com.perpheads.files.wrappers.axiosPost
+import data.ShareFileResponse
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.serialization.decodeFromString
@@ -113,4 +114,13 @@ object ApiClient {
             xmlRequest.send(formData)
         }
     }
+
+    suspend fun getSharedFileInformation(link: String): ShareFileResponse? {
+        return try {
+            axiosGet("/share/${link}")
+        } catch (e: NotFoundException) {
+            null
+        }
+    }
+
 }

@@ -2,23 +2,26 @@ package com.perpheads.files
 
 import com.perpheads.files.controllers.accountRoutes
 import com.perpheads.files.controllers.fileRoutes
+import com.perpheads.files.controllers.shareRoutes
 import com.perpheads.files.daos.CookieDao
 import com.perpheads.files.daos.FileDao
 import com.perpheads.files.daos.UserDao
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.http.cio.websocket.*
 import io.ktor.http.content.*
 import io.ktor.locations.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
-import io.ktor.util.*
+import io.ktor.websocket.*
 import kotlinx.serialization.json.Json
 import org.flywaydb.core.Flyway
 import org.koin.core.context.startKoin
 import org.slf4j.event.Level
 import java.nio.file.attribute.FileTime
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
@@ -111,13 +114,20 @@ fun Application.module(testing: Boolean = false) {
         setupDaos(userDao, cookieDao)
     }
 
+    install(WebSockets) {
+        pingPeriod = Duration.ofSeconds(15)
+        timeout = Duration.ofSeconds(15)
+        maxFrameSize = 1000 * 1000 //1MB
+        masking = false
+    }
+
     install(StatusPages) {
         exception<ForbiddenException> { cause ->
             call.respond(message = cause.content, status = HttpStatusCode.Forbidden)
         }
         exception<UnauthorizedException> { cause ->
             call.response.cookies.appendExpired(
-                name ="id",
+                name = "id",
                 path = "/",
                 domain = phConfig.cookie.domain
             )
@@ -151,6 +161,7 @@ fun Application.module(testing: Boolean = false) {
     routing {
         accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao)
         fileRoutes(fileDao, phConfig)
+        shareRoutes()
         static("/") {
             defaultResource("index.html")
             resource("favicon.ico")

@@ -52,6 +52,14 @@ fun main() {
                             attrs.element = createElement(ApiKeyComponent)
                         }
                         Route {
+                            attrs.path = "/share"
+                            attrs.element = createElement(ShareComponent)
+                        }
+                        Route {
+                            attrs.path = "/share/:token"
+                            attrs.element = createElement(ShareDownloadComponent)
+                        }
+                        Route {
                             attrs.path = "/"
                             attrs.element = createElement(LoginPageComponent)
                         }
