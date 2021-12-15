@@ -43,10 +43,6 @@ class WebSocketSender(private val path: String, private val file: File) {
                 }
             }
             socket.send(Json.encodeToString<ShareWebSocketMessage>(CompletedMessage))
-            if (!finalCallbackCalled) {
-                finalCallbackCalled = true
-                onCompleted()
-            }
         }
     }
 
@@ -71,9 +67,7 @@ class WebSocketSender(private val path: String, private val file: File) {
             when (val message = Json.decodeFromString<ShareWebSocketMessage>(it.data as String)) {
                 is PullMessage -> {
                     for (i in 1..message.count) {
-                        MainScope().launch {
-                            tokenChannel.trySend(Unit)
-                        }
+                        tokenChannel.trySend(Unit)
                     }
                     if (sendJob == null) {
                         startSending()
@@ -90,6 +84,14 @@ class WebSocketSender(private val path: String, private val file: File) {
                         onLinkCreated(message.link)
                     }
                 }
+                is CompletedMessage -> {
+                    if (!finalCallbackCalled) {
+                        finalCallbackCalled = true
+                        onCompleted()
+                    }
+                    close()
+                }
+                else -> {}
             }
         }
         socket.onclose = {

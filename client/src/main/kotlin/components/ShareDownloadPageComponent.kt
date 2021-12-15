@@ -9,6 +9,7 @@ import kotlinx.css.*
 import react.*
 import react.dom.div
 import react.dom.onClick
+import react.dom.p
 import react.router.useParams
 import styled.css
 import styled.styledA
@@ -48,8 +49,11 @@ val ShareDownloadComponent = fc<Props>("ShareDownloadComponent") {
                 }
                 div("col l4 center-align") {
                     fileResponse?.let { file ->
-                        div {
-                            +"Downloading file: ${file.fileName}, Size: ${file.size.humanReadableByteSize()}"
+                        p {
+                            +"Downloading file:"
+                        }
+                        SharePreviewComponent {
+                            attrs.file = file
                         }
                         styledA {
                             css {

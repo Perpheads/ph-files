@@ -12,14 +12,14 @@ import io.ktor.utils.io.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.time.withTimeout
+import kotlinx.coroutines.time.withTimeoutOrNull
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.lang.Exception
-import java.lang.RuntimeException
 import java.security.SecureRandom
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -82,8 +82,7 @@ fun Route.shareRoutes() {
 
     suspend fun selectCloseOrStart(
         completableDeferred: CompletableDeferred<Unit>,
-        incoming: ReceiveChannel<*>,
-        outgoing: SendChannel<Frame>
+        incoming: ReceiveChannel<*>
     ) {
         select<Unit> {
             completableDeferred.onAwait {
@@ -93,14 +92,32 @@ fun Route.shareRoutes() {
             }
         }
     }
+    val validFileNameRegex = Regex("^[\\w\\-. ]+$")
 
     requireUser(AuthorizationType.COOKIE) {
         webSocket("/share/ws") {
             val userId = call.user().userId
             val logger = this.application.log
             logger.info("Opened share session for user $userId")
-            val announceFrame = this.incoming.receive()
+            val announceFrame = withTimeoutOrNull(Duration.ofSeconds(10)) {
+                incoming.receive()
+            }
+            if (announceFrame == null) {
+                val errorMessage =
+                    Json.encodeToString<ShareWebSocketMessage>(ErrorMessage("Timeout waiting for announcement"))
+                outgoing.send(Frame.Text(errorMessage))
+                return@webSocket
+            }
             val announceMessage = Json.decodeFromString<AnnounceMessage>(announceFrame.data.decodeToString())
+            if (!validFileNameRegex.matches(announceMessage.fileName) || announceMessage.fileName.length !in 2..50) {
+                logger.warn("User $userId attempted share session with invalid filename: ${announceMessage.fileName}")
+                val errorMessage =
+                    Json.encodeToString<ShareWebSocketMessage>(ErrorMessage("Invalid filename"))
+                outgoing.send(Frame.Text(errorMessage))
+                return@webSocket
+            }
+
+
             logger.info("Received announce message: $announceMessage from user $userId")
             val completable = CompletableDeferred<Unit>()
             val windowSize = 10
@@ -129,7 +146,7 @@ fun Route.shareRoutes() {
                 outgoing.send(Frame.Text(Json.encodeToString<ShareWebSocketMessage>(LinkMessage(token))))
                 logger.info("Waiting for user to open share link for user $userId")
                 withTimeout(Duration.ofMinutes(10)) {
-                    selectCloseOrStart(completable, incoming, outgoing) //Wait for someone to start downloading
+                    selectCloseOrStart(completable, incoming) //Wait for someone to start downloading
                 }
                 openSessions.remove(token)
                 outgoing.send(Frame.Text(Json.encodeToString<ShareWebSocketMessage>(PullMessage(windowSize))))
@@ -146,6 +163,7 @@ fun Route.shareRoutes() {
                     } else if (dataFrame is Frame.Text) {
                         val message = Json.decodeFromString<ShareWebSocketMessage>(dataFrame.readText())
                         if (message is CompletedMessage) {
+                            outgoing.send(Frame.Text(Json.encodeToString<ShareWebSocketMessage>(CompletedMessage)))
                             logger.info("File upload complete for $token")
                             break
                         }

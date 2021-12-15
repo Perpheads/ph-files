@@ -130,6 +130,12 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
                         }
                     }
                     li {
+                        Link {
+                            attrs.to = "/share"
+                            +"Transfer File"
+                        }
+                    }
+                    li {
                         a {
                             attrs.onClick = { doLogout() }
                             +"Logout"

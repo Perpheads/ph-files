@@ -93,7 +93,6 @@ object ApiClient {
                 continuation.resumeWithException(RuntimeException("Unknown error while fetching data"))
             }
             xmlRequest.onreadystatechange = {
-                console.log("Ready state changed: ${xmlRequest.readyState}")
                 if (xmlRequest.readyState == 4.toShort()) {
                     when (xmlRequest.status) {
                         200.toShort() -> {

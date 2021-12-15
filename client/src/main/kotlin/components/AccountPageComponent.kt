@@ -30,7 +30,7 @@ private fun <T> List<T>.prepend(elem: T): List<T> {
     return newList
 }
 
-val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") { props ->
+val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     val location = useLocation()
     val parameters = parseQueryString(location.search.drop(1))
     val navigate = useNavigate()
