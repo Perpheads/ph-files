@@ -3,13 +3,13 @@ package com.perpheads.files.controllers
 import com.perpheads.files.*
 import com.perpheads.files.data.*
 import data.ShareFileResponse
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.http.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.utils.io.*
 import io.ktor.websocket.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.utils.io.*
+import io.ktor.server.websocket.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
@@ -92,6 +92,7 @@ fun Route.shareRoutes() {
             }
         }
     }
+
     val validFileNameRegex = Regex("^[\\w\\-. ]+$")
 
     requireUser(AuthorizationType.COOKIE) {

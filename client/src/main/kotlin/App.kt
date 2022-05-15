@@ -1,9 +1,9 @@
 package com.perpheads.files
 
 import com.perpheads.files.components.*
-import kotlinext.js.jso
 import kotlinx.browser.document
 import kotlinx.browser.window
+import kotlinx.js.jso
 import react.Props
 import react.createElement
 import react.dom.render

@@ -6,10 +6,10 @@ import com.perpheads.files.Authorization.Feature.userAttributeKey
 import com.perpheads.files.daos.CookieDao
 import com.perpheads.files.daos.UserDao
 import com.perpheads.files.data.User
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.request.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import kotlinx.coroutines.Dispatchers
@@ -30,11 +30,13 @@ class Authorization(
         }
     }
 
+    private val challengePhase = PipelinePhase("Challenge")
+
     fun interceptPipeline(
         pipeline: ApplicationCallPipeline, type: AuthorizationType
     ) {
-        pipeline.insertPhaseAfter(ApplicationCallPipeline.Features, Authentication.ChallengePhase)
-        pipeline.insertPhaseAfter(Authentication.ChallengePhase, AuthorizationPhase)
+        pipeline.insertPhaseAfter(ApplicationCallPipeline.Plugins, challengePhase)
+        pipeline.insertPhaseAfter(challengePhase, AuthorizationPhase)
         pipeline.intercept(AuthorizationPhase) {
             val user: User = when (type) {
                 AuthorizationType.API_KEY -> {
@@ -58,7 +60,7 @@ class Authorization(
     }
 
 
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, Authorization> {
+    companion object Feature : BaseApplicationPlugin<ApplicationCallPipeline, Configuration, Authorization> {
         override val key: AttributeKey<Authorization> = AttributeKey("Authorization")
         val AuthorizationPhase = PipelinePhase("Authorization")
         val userAttributeKey: AttributeKey<User> = AttributeKey("user")
@@ -105,7 +107,7 @@ class AuthorizedUserRouteSelector() : RouteSelector() {
 
 fun Route.requireUser(authorizationType: AuthorizationType, body: Route.() -> Unit): Route {
     val authorizedRoute = createChild(AuthorizedUserRouteSelector())
-    application.feature(Authorization).interceptPipeline(authorizedRoute, authorizationType)
+    application.plugin(Authorization).interceptPipeline(authorizedRoute, authorizationType)
     authorizedRoute.body()
     return authorizedRoute
 }

@@ -1,18 +1,17 @@
 package com.perpheads.files.wrappers
 
 import com.perpheads.files.ApiClient
-import kotlinext.js.Object
 import kotlinx.coroutines.await
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.js.jso
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.js.json
 
-inline fun <reified U> generateConfig(ct: CancelToken? = null) = object : AxiosRequestConfig {
-    override var cancelToken = ct
+inline fun <reified U> generateConfig(ct: CancelToken? = null) = jso<AxiosRequestConfig> {
+    cancelToken = ct
 
-    override var transformRequest: Array<(U, dynamic) -> String> = arrayOf(
+    transformRequest = arrayOf<(U, dynamic) -> String>(
         { data, headers ->
             when {
                 data === undefined -> ""
@@ -26,7 +25,7 @@ inline fun <reified U> generateConfig(ct: CancelToken? = null) = object : AxiosR
         }
     )
 
-    override var transformResponse: (String) -> String = { it }
+    transformResponse = { a: String -> a }
 }
 
 class AxiosConfigScope(private val config: AxiosRequestConfig) {

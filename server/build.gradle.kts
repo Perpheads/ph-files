@@ -1,8 +1,17 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.flywaydb", "flyway-mysql", "8.5.10")
+    }
+}
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("nu.studer.jooq") version "6.0.1"
-    id("org.flywaydb.flyway") version "8.2.0"
+    id("org.flywaydb.flyway") version "8.5.10"
     id("com.bmuschko.docker-java-application") version "7.1.0"
     application
 }
@@ -41,22 +50,35 @@ val browserDist by configurations.creating {
 dependencies {
     implementation(project(":shared"))
     implementation(kotlin("stdlib-common"))
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-auth:$ktor_version")
-    implementation("io.ktor:ktor-locations:$ktor_version")
-    implementation("io.ktor:ktor-websockets:$ktor_version")
-    implementation("io.ktor:ktor-server-host-common:$ktor_version")
-    implementation("io.ktor:ktor-html-builder:$ktor_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-serialization:$ktor_version")
-    implementation("io.ktor:ktor-html-builder:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.github.config4k:config4k:$config4k_version")
     implementation("com.zaxxer:HikariCP:$hikari_version")
     implementation("org.jooq:jooq:$jooq_version")
     implementation("org.flywaydb:flyway-core:$flyway_version")
+    implementation("org.flywaydb:flyway-mysql:$flyway_version")
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("commons-codec:commons-codec:1.15")
+    implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-auth-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-locations-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-host-common-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-html-builder-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-html-builder-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-auto-head-response:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
+    implementation("io.ktor:ktor-server-data-conversion:$ktor_version")
+    implementation("io.ktor:ktor-server-compression:$ktor_version")
+    implementation("io.ktor:ktor-server-caching-headers:$ktor_version")
+    implementation("io.ktor:ktor-server-conditional-headers:$ktor_version")
+    implementation("io.ktor:ktor-server-cors:$ktor_version")
+    implementation("io.ktor:ktor-server-forwarded-header:$ktor_version")
+    implementation("io.ktor:ktor-server-partial-content:$ktor_version")
+    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     runtimeOnly("org.flywaydb:flyway-gradle-plugin:$flyway_version")
     implementation("io.insert-koin:koin-ktor:$koin_version")
     runtimeOnly("mysql:mysql-connector-java:$mysql_version")

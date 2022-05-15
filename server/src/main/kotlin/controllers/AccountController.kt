@@ -6,14 +6,14 @@ import com.perpheads.files.daos.FileDao
 import com.perpheads.files.daos.UserDao
 import com.perpheads.files.data.*
 import com.perpheads.files.data.Cookie
-import io.ktor.locations.*
-import io.ktor.locations.post
-import io.ktor.locations.get
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.locations.*
+import io.ktor.server.locations.post
+import io.ktor.server.locations.get
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.util.date.*
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.http.*
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
@@ -121,7 +121,7 @@ fun Route.accountRoutes(
                     cookieDao.deleteAllByUser(call.user().userId)
                 }
                 call.response.cookies.appendExpired(
-                    name ="id",
+                    name = "id",
                     path = "/",
                     domain = cookieConfig.domain
                 )

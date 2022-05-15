@@ -22,7 +22,7 @@ external interface LoginCardComponentProps : Props {
     var setError: StateSetter<String?>
 }
 
-val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardComponent") { props ->
+val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { props ->
     val (username, setUsername) = useState("")
     val (password, setPassword) = useState("")
     val (remember, setRemember) = useState(false)
@@ -108,7 +108,7 @@ val LoginCardComponent = functionComponent<LoginCardComponentProps>("LoginCardCo
 }
 
 
-val LoginPageComponent = functionComponent<Props>("LoginComponent") { _ ->
+val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
     val (error, errorSet) = useState<String?>(null)
     if (window.localStorage.getItem("loggedIn") == "yes") {
         Navigate {
