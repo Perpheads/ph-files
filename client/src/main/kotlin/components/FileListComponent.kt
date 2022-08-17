@@ -20,7 +20,7 @@ val FileListComponent = fc<FileListComponentProps>("FileListComponent") { props 
                 th { +"Name" }
                 th { +"Date" }
                 th { +"Size" }
-                th { +"Thumbnail" }
+                th { +"Delete" }
             }
         }
         tbody {
