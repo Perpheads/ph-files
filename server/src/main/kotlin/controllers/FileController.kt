@@ -149,6 +149,7 @@ fun Route.fileRoutes(
         ContentType.Audio.MP4,
         ContentType.Audio.OGG,
         ContentType.Audio.MPEG,
+        ContentType("audio", "mp3"),
         ContentType.Application.Pdf,
     )
 
