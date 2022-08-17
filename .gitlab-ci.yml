@@ -20,7 +20,7 @@ stages:
 
 build:
   stage: build
-  image: gradle:jdk11
+  image: gradle:jdk17
   script: gradle build :server:dockerCreateDockerfile
   artifacts:
     paths:
