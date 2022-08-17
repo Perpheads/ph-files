@@ -135,6 +135,28 @@ fun Route.fileRoutes(
         }
     }
 
+    val whitelistedTypes = setOf(
+        ContentType.Image.PNG,
+        ContentType.Image.JPEG,
+        ContentType.Image.GIF,
+        ContentType("image", "webp"),
+        ContentType.Video.MP4,
+        ContentType.Video.OGG,
+        ContentType.Video.MPEG,
+        ContentType.Text.Plain,
+        ContentType.Application.Json,
+        ContentType.Audio.MP4,
+        ContentType.Audio.OGG,
+        ContentType.Audio.MPEG,
+        ContentType.Application.Pdf,
+    )
+
+    val forcedTextTypes = setOf(
+        ContentType.Application.Json,
+        ContentType.Application.Xml
+    )
+
+
     get<FileRoute> {
         val md5Header = call.request.headers["If-None-Match"]?.lowercase()
         val file = withContext(Dispatchers.IO) {
@@ -148,9 +170,15 @@ fun Route.fileRoutes(
             fileMD5?.let {
                 call.response.etag(fileMD5)
             }
-            var contentType = if (file.mimeType.lowercase().contains("html")) {
+
+            val storedContentType = ContentType.parse(file.mimeType)
+            var contentType = if (whitelistedTypes.contains(storedContentType)) {
+                storedContentType
+            } else if (forcedTextTypes.contains(storedContentType) || storedContentType.match(ContentType.Text.Any)) {
                 ContentType.Text.Plain
-            } else ContentType.parse(file.mimeType)
+            } else {
+                ContentType.Application.OctetStream
+            }
 
             if (contentType.match(ContentType.Text.Any)) {
                 contentType = contentType.withParameter("charset", "utf-8")

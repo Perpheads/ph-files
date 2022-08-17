@@ -1,11 +1,11 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
-import com.perpheads.files.data.humanReadableByteSize
 import data.ShareFileResponse
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
+import kotlinx.js.get
 import react.*
 import react.dom.div
 import react.dom.onClick
@@ -13,7 +13,6 @@ import react.dom.p
 import react.router.useParams
 import styled.css
 import styled.styledA
-import styled.styledButton
 import styled.styledDiv
 
 

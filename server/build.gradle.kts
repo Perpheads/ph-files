@@ -24,7 +24,6 @@ val mysql_version: String by project
 val koin_version: String by project
 val hikari_version: String by project
 val config4k_version: String by project
-val kotlin_react_version: String by project
 
 application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
