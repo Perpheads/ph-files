@@ -143,6 +143,7 @@ fun Route.fileRoutes(
         ContentType.Video.MP4,
         ContentType.Video.OGG,
         ContentType.Video.MPEG,
+        ContentType("video", "webm"),
         ContentType.Text.Plain,
         ContentType.Application.Json,
         ContentType.Audio.MP4,
