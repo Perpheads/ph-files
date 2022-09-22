@@ -8,6 +8,7 @@ import com.perpheads.files.wrappers.axiosPost
 import data.ShareFileResponse
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
+import kotlinx.css.em
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.w3c.files.File
@@ -22,7 +23,7 @@ object ApiClient {
 
     object UnauthorizedException : Exception()
     object NotFoundException : Exception()
-    data class UnexpectedHttpStatusException(val status: Int): Exception()
+    data class UnexpectedHttpStatusException(val status: Int) : Exception()
 
     suspend fun loadFiles(
         query: String = "",
@@ -37,7 +38,7 @@ object ApiClient {
             page = page,
             entriesPerPage = entriesPerPage
         )
-        val result =  axiosPost<FileListResponse, SearchRequest>("/account", request) {
+        val result = axiosPost<FileListResponse, SearchRequest>("/account", request) {
             parameter("include_thumbnails", "false")
         }
         return result
@@ -73,6 +74,15 @@ object ApiClient {
         return axiosPost("/auth", body)
     }
 
+    suspend fun createUser(username: String, email: String, password: String) {
+        val body = CreateUserRequest(
+            username = username,
+            email = email,
+            password = password
+        )
+        return axiosPost("/users", body)
+    }
+
     suspend fun logout() = axiosPost<Unit>("/logout")
 
     suspend fun changePassword(existingPassword: String, newPassword: String) {
@@ -103,6 +113,7 @@ object ApiClient {
                                 continuation.resumeWithException(RuntimeException("Unknown error when fetching data"))
                             }
                         }
+
                         401.toShort() -> continuation.resumeWithException(UnauthorizedException)
                         else -> continuation.resumeWithException(RuntimeException("Unknown error when fetching data"))
                     }

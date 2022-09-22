@@ -4,7 +4,6 @@ import com.perpheads.files.data.humanReadableByteSize
 import data.ShareFileResponse
 import kotlinx.css.*
 import react.Props
-import react.dom.div
 import react.dom.p
 import react.fc
 import styled.css

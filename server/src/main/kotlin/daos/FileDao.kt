@@ -7,9 +7,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.jooq.types.UInteger
 
-class FileDao(
-    private val conf: Configuration
-) {
+class FileDao(conf: Configuration) {
     private val dslContext = DSL.using(conf)
 
     fun updateThumbnail(fileId: Int, thumbnail: ByteArray, create: DSLContext = dslContext) {
@@ -66,17 +64,13 @@ class FileDao(
         }
         if (searchStr != null) {
             condition = condition.and(FILES.FILE_NAME.likeIgnoreCase("%" + searchStr.replace("%", "!%") + "%", '!'))
-            /*condition = condition.and(
-                "MATCH(?) AGAINST(CONCAT('*', ?, '*') IN BOOLEAN MODE)",
-                FILES.FILE_NAME, searchStr
-            )*/
         }
 
         val query = create.select()
             .from(FILES)
             .where(condition)
             .orderBy(FILES.FILE_ID.desc())
-        val fileCount = create.fetchCount(query)
+        val fileCount = create.selectCount().from(FILES).where(condition).fetchSingle().value1()
         val files = query.offset(offset).limit(limit).fetchInto(File::class.java)
         return fileCount to files
     }

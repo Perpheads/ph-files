@@ -33,7 +33,6 @@ object PhFilesModule {
         }
 
         single {
-            val config = get<PhFilesConfig>().database
             DefaultConfiguration()
                 .set(SQLDialect.MYSQL)
                 .set(get<DataSource>())

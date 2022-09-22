@@ -9,7 +9,7 @@ data class DatabaseConfig(
     val database: String,
     val user: String,
     val password: String,
-    val maxPoolSize: Int
+    val maxPoolSize: Int,
 ) {
     fun toHikariConfig(): HikariConfig {
         val hikariConfig = HikariConfig()

@@ -15,7 +15,6 @@ import io.ktor.server.routing.*
 import io.ktor.util.date.*
 import io.ktor.server.application.*
 import io.ktor.http.*
-import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinInstant
@@ -77,7 +76,7 @@ fun Route.accountRoutes(
             extensions = mapOf("SameSite" to "Strict")
         )
 
-        call.respond(LoginResponse(accountInfo = AccountInfo(user.name, user.email)))
+        call.respond(LoginResponse(accountInfo = AccountInfo(user.name, user.email, user.admin)))
     }
 
     val dateFormatter = DateTimeFormatter
@@ -91,9 +90,8 @@ fun Route.accountRoutes(
         }
 
         post<GenerateApiKeyRoute> {
-            val newApiKey = secureRandom.alphaNumeric(32)
-            withContext(Dispatchers.IO) {
-                userDao.updateApiKey(call.user().userId, newApiKey)
+            val newApiKey = withContext(Dispatchers.IO) {
+                userDao.generateApiKey(call.user().userId)
             }
             call.respond(ApiKeyResponse(newApiKey))
         }
@@ -104,6 +102,26 @@ fun Route.accountRoutes(
             }
             call.response.cookies.appendExpired("id")
             call.respondRedirect(application.locations.href(RootRoute))
+        }
+
+        post<UsersRoute> {
+            if (!call.user().admin) {
+                throw ForbiddenException()
+            }
+            val request = call.receive<CreateUserRequest>()
+            if (!request.isValidRequest()) {
+                throw BadRequestException()
+            }
+
+            withContext(Dispatchers.IO) {
+                userDao.createUser(
+                    username = request.username,
+                    email = request.email,
+                    password = request.password
+                )
+            }
+
+            call.respondText("")
         }
 
         post<ChangePasswordRoute> {
@@ -164,7 +182,7 @@ fun Route.accountRoutes(
 
         get<AccountInfoRoute> {
             val user = call.user()
-            call.respond(AccountInfo(user.name, user.email))
+            call.respond(AccountInfo(user.name, user.email, user.admin))
         }
 
         post<AccountRoute> {

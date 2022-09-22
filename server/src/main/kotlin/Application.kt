@@ -28,14 +28,11 @@ import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.partialcontent.PartialContent
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.websocket.*
-import kotlinx.serialization.json.Json
 import org.flywaydb.core.Flyway
 import org.koin.core.context.startKoin
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
-import java.nio.file.attribute.FileTime
 import java.time.Duration
-import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 
 fun main(args: Array<String>): Unit =
@@ -45,12 +42,18 @@ fun main(args: Array<String>): Unit =
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
+    val logger = LoggerFactory.getLogger("Application")
+    logger.info("Starting application")
+
+    logger.info("Starting Koin")
     val koin = startKoin {
         modules(PhFilesModule.module)
     }.koin
 
+    logger.info("Starting flyway migration")
     val flyway = koin.get<Flyway>()
     flyway.migrate()
+    logger.info("Flyway migration successful")
 
     val userDao = koin.get<UserDao>()
     val cookieDao = koin.get<CookieDao>()
@@ -146,13 +149,12 @@ fun Application.module(testing: Boolean = false) {
                     cause.printStackTrace()
                     call.respond(
                         message = "Oops, something went wrong with your request.\nPlease try again later.",
-                        status = io.ktor.http.HttpStatusCode.InternalServerError
+                        status = HttpStatusCode.InternalServerError
                     )
                 }
             }
         }
     }
-    println("Starting application")
 
     routing {
         accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao)
@@ -170,7 +172,7 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
-    println("Application started")
+    logger.info("Application started")
 }
 
 

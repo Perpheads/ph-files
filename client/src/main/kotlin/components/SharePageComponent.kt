@@ -16,8 +16,10 @@ import react.fc
 import react.router.useNavigate
 import react.useEffectOnce
 import react.useState
-import styled.*
-import kotlin.math.roundToInt
+import styled.css
+import styled.styledButton
+import styled.styledDiv
+import styled.styledInput
 
 val ShareComponent = fc<Props>("ShareComponent") {
     val navigate = useNavigate()

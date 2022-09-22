@@ -1,11 +1,8 @@
 package com.perpheads.files.components
 
-import com.perpheads.files.ApiClient
+import com.perpheads.files.*
 import com.perpheads.files.ApiClient.uploadFile
-import com.perpheads.files.Parameters
 import com.perpheads.files.data.FileResponse
-import com.perpheads.files.logoutIfUnauthorized
-import com.perpheads.files.parseQueryString
 import kotlinx.browser.document
 import kotlinx.coroutines.launch
 import kotlinx.css.*
@@ -31,16 +28,17 @@ private fun <T> List<T>.prepend(elem: T): List<T> {
 }
 
 val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
+    val (account, _) = useAccount()
+
     val location = useLocation()
     val parameters = parseQueryString(location.search.drop(1))
     val navigate = useNavigate()
     val page = parameters["page"]?.toIntOrNull() ?: 1
     val search = parameters["search"] ?: ""
 
-    val (username, setUsername) = useState<String?>(null)
-    val (paginationData, setPaginationData) = useState(PaginationData(1, 1, 1, 1))
-    val (files, setFiles) = useState<List<FileResponse>>(emptyList())
-    val (queueFiles, setQueueFiles) = useState(emptyList<UploadQueueEntry>())
+    var paginationData by useState(PaginationData(1, 1, 1, 1))
+    var files by useState<List<FileResponse>>(emptyList())
+    var queueFiles by useState(emptyList<UploadQueueEntry>())
 
     fun changeUrl(newPage: Int, newSearch: String) {
         val params = Parameters.build {
@@ -55,35 +53,27 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     fun doUploadFile(file: File) {
         ApiClient.mainScope.launch {
             val progressEntry = UploadQueueEntry(file.name, 0.0)
-            setQueueFiles(queueFiles.prepend(progressEntry))
+            queueFiles = queueFiles.prepend(progressEntry)
             val response = uploadFile(file) { progress ->
                 progressEntry.progress = progress
-                setQueueFiles(queueFiles.toList())
+                queueFiles = queueFiles.toList()
             }
-            val newList = files.take(8).prepend(response)
-            setFiles(newList)
-            setQueueFiles(queueFiles.filter { it !== progressEntry })
+            files = files.take(8).prepend(response)
+            queueFiles = queueFiles.filter { it !== progressEntry }
         }
     }
 
     suspend fun loadFiles() {
         logoutIfUnauthorized(navigate) {
             val response = ApiClient.loadFiles(query = search, page = page)
-            setPaginationData(
-                PaginationData(
-                    totalPages = response.totalPages,
-                    currentPage = response.currentPage,
-                    pageStart = response.pageStart,
-                    pageEnd = response.pageEnd
-                )
+            paginationData = PaginationData(
+                totalPages = response.totalPages,
+                currentPage = response.currentPage,
+                pageStart = response.pageStart,
+                pageEnd = response.pageEnd
             )
-            setFiles(response.files)
-        }
-    }
 
-    suspend fun loadUsername() {
-        logoutIfUnauthorized(navigate) {
-            setUsername(ApiClient.getAccountInfo().username)
+            files = response.files
         }
     }
 
@@ -99,14 +89,10 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
         }
     }
 
-    useEffectOnce {
-        ApiClient.mainScope.launch {
-            loadUsername()
-        }
-    }
-
     div {
         navBar {
+            user = account
+            val username = account?.username
             message = if (username != null) {
                 "Hey there, $username."
             } else {
@@ -143,7 +129,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
                         ApiClient.mainScope.launch {
                             doDelete(file)
                             val newFiles = files.filter { file.fileId != it.fileId }
-                            setFiles(newFiles)
+                            files = newFiles
                         }
                     }
                 }
@@ -170,7 +156,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
         }
         div("fixed-action-btn") {
             a(classes = "btn-floating btn-large red") {
-                attrs.onClick = { event ->
+                attrs.onClick = { _ ->
                     document.getElementById("file-input")?.let { elem ->
                         (elem as HTMLInputElement).click()
                     }

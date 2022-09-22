@@ -14,6 +14,9 @@ object AccountInfoRoute
 @Location("/auth")
 object AuthRoute
 
+@Location("/users")
+object UsersRoute
+
 @Location("/upload")
 object UploadRoute
 

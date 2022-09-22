@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-val kotlinWrappersVersion = "1.0.0-pre.369"
+val kotlinWrappersVersion = "1.0.0-pre.390"
 
 kotlin {
     js(IR) {
@@ -23,8 +23,8 @@ dependencies {
     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-styled")
-    implementation(npm("@emotion/react", "11.10.0"))
-    implementation(npm("@emotion/styled", "11.10.0"))
+    implementation(npm("@emotion/react", "11.10.4"))
+    implementation(npm("@emotion/styled", "11.10.4"))
 }
 
 

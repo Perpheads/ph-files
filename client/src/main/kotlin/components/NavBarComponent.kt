@@ -1,7 +1,9 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
+import com.perpheads.files.data.AccountInfo
 import com.perpheads.files.logout
+import com.perpheads.files.useAccount
 import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.html.InputType
@@ -22,10 +24,12 @@ external interface NavBaProps : Props {
     var search: String
     var showSearchBar: Boolean
     var onSearchChanged: (String) -> Unit
+    var user: AccountInfo?
 }
 
 val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
     val navigate = useNavigate()
+    val (account, _) = useAccount()
 
     fun doLogout() {
         ApiClient.mainScope.launch {
@@ -133,6 +137,14 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
                         Link {
                             attrs.to = "/share"
                             +"Transfer File"
+                        }
+                    }
+                    if (account?.admin == true) {
+                        li {
+                            Link {
+                                attrs.to = "/create-account"
+                                +"Create New Account"
+                            }
                         }
                     }
                     li {

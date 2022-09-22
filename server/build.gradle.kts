@@ -3,16 +3,16 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.flywaydb", "flyway-mysql", "9.0.4")
+        classpath("org.flywaydb", "flyway-mysql", "9.3.1")
     }
 }
 
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
-    id("nu.studer.jooq") version "6.0.1"
-    id("org.flywaydb.flyway") version "9.0.4"
-    id("com.bmuschko.docker-java-application") version "7.3.0"
+    id("nu.studer.jooq") version "7.1.1"
+    id("org.flywaydb.flyway") version "9.3.1"
+    id("com.bmuschko.docker-java-application") version "8.1.0"
     application
 }
 
