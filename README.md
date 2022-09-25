@@ -1,7 +1,7 @@
 # Perpheads Files
 
 A very basic [ShareX](https://getsharex.com/) target for uploading images/files that also
-supports sharing files in a P2P fashion similar to [justbeamit](https://justbeamit.com/).
+supports sharing files in a P2P fashion similar to [JustBeamIt](https://justbeamit.com/).
 
 Perpheads Files is written entirely in Kotlin, using [Ktor](https://ktor.io/) as the
 web server and Restful API, and [KotlinJS/ for React](https://kotlinlang.org/docs/js-get-started.html)
