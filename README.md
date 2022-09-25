@@ -22,7 +22,7 @@ to be run behind a reverse proxy that does TLS termination (For example nginx).
 By default, the application trusts any forwarded IP headers, so using it without
 such a proxy will be dangerous.
 
-The files are stored locally in the docker container (by default in the /app/files directory).
+The files are stored locally in the docker container (by default in the ``/app/files`` directory).
 If you want to persist the uploaded files, create  a volume at that path.
 
 
