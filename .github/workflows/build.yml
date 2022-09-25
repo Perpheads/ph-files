@@ -1,10 +1,13 @@
-name: Kotlin CI with Gradle
+name: build
 
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - '*'
   pull_request:
     branches: [ "main" ]
+  workflow_call:
 
 permissions:
   contents: read
@@ -34,10 +37,15 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
+          arguments: ':server:dockerCreateDockerfile'
         env:
           FILES_DB_HOST: "mysql"
           FILES_DB_PORT: 3306
           FILES_DB_DATABASE: "files"
           FILES_DB_USER: "files"
           FILES_DB_PASSWORD: "files"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: docker-build
+          path: server/build/docker
+          retention-days: 7
