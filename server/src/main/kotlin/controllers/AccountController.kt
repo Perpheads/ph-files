@@ -88,6 +88,9 @@ fun Route.accountRoutes(
         )
     }
 
+    post<AuthRoute> {
+        handleAuthentication(false)
+    }
 
     post<AuthRouteV2> {
         handleAuthentication(true)
