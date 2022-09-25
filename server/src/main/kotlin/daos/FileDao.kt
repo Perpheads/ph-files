@@ -1,7 +1,10 @@
 package com.perpheads.files.daos
 
 import com.perpheads.files.data.File
+import com.perpheads.files.data.FileTotalStatistics
+import com.perpheads.files.data.FileUserStatistics
 import com.perpheads.files.db.Tables.FILES
+import com.perpheads.files.db.Tables.USERS
 import org.jooq.Configuration
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -101,5 +104,33 @@ class FileDao(conf: Configuration) {
         create.deleteFrom(FILES)
             .where(FILES.FILE_ID.eq(fileId))
             .execute()
+    }
+
+    fun getTotalStatistics(create: DSLContext = dslContext): FileTotalStatistics {
+        return create.select(DSL.count(FILES.FILE_ID), DSL.sum(FILES.SIZE))
+            .from(FILES)
+            .fetchSingle {
+                FileTotalStatistics(
+                    fileCount = it.value1(),
+                    storageUsed = it.value2().toLong()
+                )
+            }
+    }
+
+    fun getUserStatistics(create: DSLContext = dslContext): List<FileUserStatistics> {
+        val sumField = DSL.sum(FILES.SIZE).`as`("sum")
+        return create.select(USERS.NAME, DSL.count(FILES.FILE_ID), sumField)
+            .from(USERS)
+            .join(FILES).on(FILES.USER_ID.eq(USERS.USER_ID))
+            .groupBy(USERS.NAME)
+            .orderBy(sumField.desc())
+            .limit(100)
+            .fetch {
+                FileUserStatistics(
+                    name = it.value1(),
+                    fileCount = it.value2(),
+                    storageUsed = it.value3().toLong()
+                )
+            }
     }
 }

@@ -12,11 +12,9 @@ import react.*
 import react.dom.*
 import react.dom.events.KeyboardEventHandler
 import react.router.Navigate
+import react.router.dom.Link
 import react.router.useNavigate
-import styled.css
-import styled.styledDiv
-import styled.styledImg
-import styled.styledInput
+import styled.*
 
 external interface LoginCardComponentProps : Props {
     var setError: StateSetter<String?>
@@ -135,6 +133,20 @@ val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
             }
         }
         loginCardComponent { setError = errorSet }
+
+        styledDiv {
+            css {
+                position = Position.absolute
+                right = 16.px
+                bottom = 10.px
+                fontSize = 22.px
+            }
+
+            Link {
+                attrs.to = "/contact"
+                +"Contact"
+            }
+        }
     }
 }
 

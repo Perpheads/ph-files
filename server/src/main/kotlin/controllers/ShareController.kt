@@ -2,7 +2,7 @@ package com.perpheads.files.controllers
 
 import com.perpheads.files.*
 import com.perpheads.files.data.*
-import data.ShareFileResponse
+import com.perpheads.files.data.ShareFileResponse
 import io.ktor.server.application.*
 import io.ktor.http.*
 import io.ktor.websocket.*

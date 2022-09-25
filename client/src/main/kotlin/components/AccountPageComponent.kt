@@ -11,10 +11,13 @@ import kotlinx.html.id
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.asList
 import org.w3c.files.File
-import react.*
+import react.Props
 import react.dom.*
+import react.fc
 import react.router.useLocation
 import react.router.useNavigate
+import react.useEffect
+import react.useState
 import styled.css
 import styled.styledDiv
 
@@ -91,7 +94,6 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
 
     div {
         navBar {
-            user = account
             val username = account?.username
             message = if (username != null) {
                 "Hey there, $username."

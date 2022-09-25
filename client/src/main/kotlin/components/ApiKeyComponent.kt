@@ -41,19 +41,20 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
     }
 
     fun copyShareXConfig() {
+        val location = window.location.origin
         window.navigator.clipboard.writeText(
             """
                 {
                   "Version": "14.0.1",
                   "DestinationType": "ImageUploader, TextUploader, FileUploader",
                   "RequestMethod": "POST",
-                  "RequestURL": "https://files.perpheads.com/upload",
+                  "RequestURL": "$location/upload",
                   "Headers": {
                     "API-KEY": "$apiKey"
                   },
                   "Body": "MultipartFormData",
                   "FileFormName": "file",
-                  "URL": "https://files.perpheads.com/{json:link}"
+                  "URL": "$location/{json:link}"
                 }
             """.trimIndent()
         )

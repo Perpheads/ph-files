@@ -1,7 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.data.humanReadableByteSize
-import data.ShareFileResponse
+import com.perpheads.files.data.ShareFileResponse
 import kotlinx.css.*
 import react.Props
 import react.dom.p

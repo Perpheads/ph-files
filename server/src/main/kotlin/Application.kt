@@ -157,7 +157,7 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
-        accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao)
+        accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao, phConfig.contact)
         fileRoutes(fileDao, phConfig)
         shareRoutes()
         static("/") {

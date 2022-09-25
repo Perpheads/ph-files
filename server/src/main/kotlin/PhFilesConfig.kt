@@ -31,9 +31,14 @@ data class CookieConfig(
     val secure: Boolean
 )
 
+data class ContactConfig(
+    val email: String
+)
+
 data class PhFilesConfig(
     val database: DatabaseConfig,
     val filesFolder: File,
     val cookie: CookieConfig,
-    val cors: CorsConfig
+    val cors: CorsConfig,
+    val contact: ContactConfig
 )

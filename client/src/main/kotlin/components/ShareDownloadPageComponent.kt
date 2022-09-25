@@ -1,7 +1,7 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
-import data.ShareFileResponse
+import com.perpheads.files.data.ShareFileResponse
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*

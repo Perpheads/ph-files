@@ -2,6 +2,7 @@ package com.perpheads.files
 
 import com.perpheads.files.components.*
 import com.perpheads.files.data.AccountInfo
+import com.perpheads.files.data.AccountInfoV2
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
@@ -32,14 +33,14 @@ inline fun logoutIfUnauthorized(navigate: NavigateFunction, block: () -> Unit) {
 }
 
 class AccountContextData(
-    val account: AccountInfo?,
-    val setAccount: StateSetter<AccountInfo?>,
+    val account: AccountInfoV2?,
+    val setAccount: StateSetter<AccountInfoV2?>,
     var loadingAccount: Boolean
 )
 
 val AccountContext = createContext<AccountContextData>()
 
-fun useAccount(): Pair<AccountInfo?, StateSetter<AccountInfo?>> {
+fun useAccount(): Pair<AccountInfoV2?, StateSetter<AccountInfoV2?>> {
     val contextData = useContext(AccountContext)
     val navigate = useNavigate()
 
@@ -57,7 +58,7 @@ fun useAccount(): Pair<AccountInfo?, StateSetter<AccountInfo?>> {
 }
 
 val App = VFC {
-    val (account, setAccount) = useState<AccountInfo?>(null)
+    val (account, setAccount) = useState<AccountInfoV2?>(null)
 
     StrictMode {
         AccountContext.Provider {
@@ -87,6 +88,14 @@ val App = VFC {
                     Route {
                         path = "/share/:token"
                         element = createElement(ShareDownloadComponent)
+                    }
+                    Route {
+                        path = "/contact"
+                        element = createElement(ContactComponent)
+                    }
+                    Route {
+                        path = "/statistics"
+                        element = createElement(StatisticsComponent)
                     }
                     Route {
                         path = "/"

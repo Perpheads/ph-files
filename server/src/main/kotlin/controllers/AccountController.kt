@@ -15,6 +15,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.date.*
 import io.ktor.server.application.*
 import io.ktor.http.*
+import io.ktor.util.pipeline.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinInstant
@@ -35,18 +36,22 @@ fun Route.accountRoutes(
     userDao: UserDao,
     cookieDao: CookieDao,
     cookieConfig: CookieConfig,
-    fileDao: FileDao
+    fileDao: FileDao,
+    contact: ContactConfig
 ) {
     val secureRandom = SecureRandom()
 
-    post<AuthRoute> {
+    suspend fun PipelineContext<Unit, ApplicationCall>.handleAuthentication(isV2: Boolean) {
         val request = call.receive<LoginRequest>()
         val user = withContext(Dispatchers.IO) {
             userDao.getByUsername(request.username)
         }
         if (user == null || !BCrypt.checkpw(request.password, user.password)) {
-            call.respond(HttpStatusCode.OK, LoginResponse(error = "User not found or password incorrect"))
-            return@post
+            call.respond(
+                if (isV2) LoginResponseV2(error = "User not found or password incorrect")
+                else LoginResponse(error = "User not found or password incorrect")
+            )
+            return
         }
         val cookieStr = secureRandom.alphaNumeric(32)
         val expiryDate = if (request.remember) {
@@ -73,10 +78,23 @@ fun Route.accountRoutes(
             domain = cookieConfig.domain,
             secure = cookieConfig.secure,
             httpOnly = true,
-            extensions = mapOf("SameSite" to "Strict")
+            extensions = mapOf("SameSite" to "Strict"),
+            path = "/"
         )
 
-        call.respond(LoginResponse(accountInfo = AccountInfo(user.name, user.email, user.admin)))
+        call.respond(
+            if (isV2) LoginResponseV2(accountInfo = AccountInfoV2(user.name, user.email, user.admin))
+            else LoginResponse(accountInfo = AccountInfo(user.name, user.email))
+        )
+    }
+
+
+    post<AuthRouteV2> {
+        handleAuthentication(true)
+    }
+
+    get<ContactRoute> {
+        call.respond(ContactResponse(contact.email))
     }
 
     val dateFormatter = DateTimeFormatter
@@ -182,7 +200,7 @@ fun Route.accountRoutes(
 
         get<AccountInfoRoute> {
             val user = call.user()
-            call.respond(AccountInfo(user.name, user.email, user.admin))
+            call.respond(AccountInfoV2(user.name, user.email, user.admin))
         }
 
         post<AccountRoute> {
@@ -226,6 +244,20 @@ fun Route.accountRoutes(
                 pageStart = pageStart,
                 pageEnd = pageEnd
             )
+            call.respond(response)
+        }
+
+        get<StatisticsRoute> {
+            if (!call.user().admin) {
+                throw ForbiddenException()
+            }
+
+            val response = withContext(Dispatchers.IO) {
+                val userStatistics = fileDao.getUserStatistics()
+                val totalStatistics = fileDao.getTotalStatistics()
+                StatisticsResponse(totalStatistics, userStatistics)
+            }
+
             call.respond(response)
         }
     }

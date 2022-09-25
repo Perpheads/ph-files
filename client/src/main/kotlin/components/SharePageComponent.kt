@@ -3,7 +3,7 @@ package com.perpheads.files.components
 import com.perpheads.files.ApiClient
 import com.perpheads.files.WebSocketSender
 import com.perpheads.files.logoutIfUnauthorized
-import data.ShareFileResponse
+import com.perpheads.files.data.ShareFileResponse
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch

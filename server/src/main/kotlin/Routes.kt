@@ -11,8 +11,13 @@ data class AccountRoute(val include_thumbnails: Boolean = false)
 @Location("/account-info")
 object AccountInfoRoute
 
+@Location("/contact")
+object ContactRoute
 @Location("/auth")
 object AuthRoute
+
+@Location("/v2/auth")
+object AuthRouteV2
 
 @Location("/users")
 object UsersRoute
@@ -46,3 +51,6 @@ object LogoutRoute
 
 @Location("/change-password")
 object ChangePasswordRoute
+
+@Location("/statistics")
+object StatisticsRoute

@@ -5,7 +5,7 @@ import com.perpheads.files.wrappers.axios
 import com.perpheads.files.wrappers.axiosDelete
 import com.perpheads.files.wrappers.axiosGet
 import com.perpheads.files.wrappers.axiosPost
-import data.ShareFileResponse
+import com.perpheads.files.data.ShareFileResponse
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.css.em
@@ -57,7 +57,7 @@ object ApiClient {
         return axiosDelete("/${link}")
     }
 
-    suspend fun getAccountInfo(): AccountInfo {
+    suspend fun getAccountInfo(): AccountInfoV2 {
         return axiosGet("/account-info")
     }
 
@@ -69,9 +69,13 @@ object ApiClient {
         return axiosPost("/generate-api-key")
     }
 
-    suspend fun authenticate(username: String, password: String, remember: Boolean): LoginResponse {
+    suspend fun getStatistics(): StatisticsResponse {
+        return axiosGet("/statistics")
+    }
+
+    suspend fun authenticate(username: String, password: String, remember: Boolean): LoginResponseV2 {
         val body = LoginRequest(username, password, remember)
-        return axiosPost("/auth", body)
+        return axiosPost("/v2/auth", body)
     }
 
     suspend fun createUser(username: String, email: String, password: String) {
@@ -81,6 +85,10 @@ object ApiClient {
             password = password
         )
         return axiosPost("/users", body)
+    }
+
+    suspend fun getContact(): ContactResponse {
+        return axiosGet("/contact")
     }
 
     suspend fun logout() = axiosPost<Unit>("/logout")

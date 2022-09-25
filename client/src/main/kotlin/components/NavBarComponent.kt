@@ -1,7 +1,6 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
-import com.perpheads.files.data.AccountInfo
 import com.perpheads.files.logout
 import com.perpheads.files.useAccount
 import kotlinx.coroutines.launch
@@ -24,7 +23,6 @@ external interface NavBaProps : Props {
     var search: String
     var showSearchBar: Boolean
     var onSearchChanged: (String) -> Unit
-    var user: AccountInfo?
 }
 
 val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
@@ -144,6 +142,12 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
                             Link {
                                 attrs.to = "/create-account"
                                 +"Create New Account"
+                            }
+                        }
+                        li {
+                            Link {
+                                attrs.to = "/statistics"
+                                +"Statistics"
                             }
                         }
                     }
