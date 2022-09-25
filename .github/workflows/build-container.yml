@@ -1,7 +1,7 @@
-name: Kotlin CI with Gradle
+name: Build Container
 
 on:
-  create:
+  push:
     tags:
       - '*'
 
