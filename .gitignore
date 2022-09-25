@@ -15,8 +15,6 @@ build/
 gradle/gradle-wrapper.jar
 .idea/
 .gradle/
-gradlew
-gradlew.bat
 .kotlintest
 /logs/
 src/jvmMain/java

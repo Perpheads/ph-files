@@ -1,0 +1,51 @@
+name: build
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - '*'
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: "yes"
+          MYSQL_DATABASE: "files"
+          MYSQL_USER: "files"
+          MYSQL_PASSWORD: "files"
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
+    container: ubuntu:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ':server:dockerCreateDockerfile'
+        env:
+          FILES_DB_HOST: "mysql"
+          FILES_DB_PORT: 3306
+          FILES_DB_DATABASE: "files"
+          FILES_DB_USER: "files"
+          FILES_DB_PASSWORD: "files"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: docker-build
+          path: server/build/docker
+          retention-days: 7
