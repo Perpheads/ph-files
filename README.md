@@ -5,7 +5,7 @@ supports sharing files in a P2P fashion similar to [JustBeamIt](https://justbeam
 
 Perpheads Files is written entirely in Kotlin, using [Ktor](https://ktor.io/) as the
 web server and Restful API, and [KotlinJS/ for React](https://kotlinlang.org/docs/js-get-started.html)
-to create a single page application.
+as a single page application.
 
 [![build](https://github.com/Perpheads/ph-files/actions/workflows/build.yml/badge.svg)](https://github.com/Perpheads/ph-files/actions/workflows/build.yml)
 
@@ -25,6 +25,16 @@ such a proxy will be dangerous.
 
 The files are stored locally in the docker container (by default in the ``/app/files`` directory).
 If you want to persist the uploaded files, create  a volume at that path.
+
+To run the docker container, run the following command and add all of the required environment variables from below:
+```bash
+docker run \
+-e FILES_DB_HOST=mysql \
+-e ... \
+ghcr.io/perpheads/ph-files:latest
+```
+
+You can of course also use the docker image with Kubernetes or Docker Compose.
 
 
 ### Environment Variables
