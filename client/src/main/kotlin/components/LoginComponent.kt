@@ -133,19 +133,19 @@ val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
             }
         }
         loginCardComponent { setError = errorSet }
+    }
 
-        styledDiv {
-            css {
-                position = Position.absolute
-                right = 16.px
-                bottom = 10.px
-                fontSize = 22.px
-            }
+    styledDiv {
+        css {
+            position = Position.fixed
+            right = 16.px
+            bottom = 10.px
+            fontSize = 22.px
+        }
 
-            Link {
-                attrs.to = "/contact"
-                +"Contact"
-            }
+        Link {
+            attrs.to = "/contact"
+            +"Contact"
         }
     }
 }
