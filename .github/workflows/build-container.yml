@@ -34,7 +34,7 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: ':dockerCreateDockerfile'
+          arguments: ':server:dockerCreateDockerfile'
         env:
           FILES_DB_HOST: "mysql"
           FILES_DB_PORT: 3306
