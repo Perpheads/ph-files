@@ -12,6 +12,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: "yes"
+          MYSQL_DATABASE: "files"
+          MYSQL_USER: "files"
+          MYSQL_PASSWORD: "files"
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 17
@@ -23,3 +34,9 @@ jobs:
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
           arguments: build :server:dockerCreateDockerfile
+        env:
+          FILES_DB_HOST: "mysql"
+          FILES_DB_PORT: 3306
+          FILES_DB_DATABASE: "files"
+          FILES_DB_USER: "files"
+          FILES_DB_PASSWORD: "files"
