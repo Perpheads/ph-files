@@ -7,6 +7,7 @@ Perpheads Files is written entirely in Kotlin, using [Ktor](https://ktor.io/) as
 web server and Restful API, and [KotlinJS/ for React](https://kotlinlang.org/docs/js-get-started.html)
 to create a single page application.
 
+[![build](https://github.com/Perpheads/ph-files/actions/workflows/build.yml/badge.svg)](https://github.com/Perpheads/ph-files/actions/workflows/build.yml)
 
 ## How to deploy
 
