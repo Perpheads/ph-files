@@ -22,18 +22,19 @@ external interface NavBaProps : Props {
     var message: String
     var search: String
     var showSearchBar: Boolean
+    var requireUser: Boolean
     var onSearchChanged: (String) -> Unit
 }
 
 val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
     val navigate = useNavigate()
-    val (account, _) = useAccount()
+    val (account, _) = useAccount(props.requireUser)
 
     fun doLogout() {
         ApiClient.mainScope.launch {
             try {
                 ApiClient.logout()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
 
             }
             logout(navigate)
@@ -107,54 +108,59 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
                         i("material-icons") { +"more_vert" }
                     }
                 }
+
                 styledUl {
                     css {
                         classes += "dropdown-content"
                         marginTop = 67.px
                     }
                     attrs.id = "accountMenu"
-                    li {
-                        Link {
-                            attrs.to = "/account"
-                            +"Files"
-                        }
-                    }
-                    li {
-                        Link {
-                            attrs.to = "/api-key"
-                            +"Get API Key"
-                        }
-                    }
-                    li {
-                        Link {
-                            attrs.to = "/change-password"
-                            +"Change Password"
-                        }
-                    }
-                    li {
-                        Link {
-                            attrs.to = "/share"
-                            +"Transfer File"
-                        }
-                    }
-                    if (account?.admin == true) {
+
+
+                    if (account != null) {
                         li {
                             Link {
-                                attrs.to = "/create-account"
-                                +"Create New Account"
+                                attrs.to = "/account"
+                                +"Files"
                             }
                         }
                         li {
                             Link {
-                                attrs.to = "/statistics"
-                                +"Statistics"
+                                attrs.to = "/api-key"
+                                +"Get API Key"
                             }
                         }
-                    }
-                    li {
-                        a {
-                            attrs.onClick = { doLogout() }
-                            +"Logout"
+                        li {
+                            Link {
+                                attrs.to = "/change-password"
+                                +"Change Password"
+                            }
+                        }
+                        li {
+                            Link {
+                                attrs.to = "/share"
+                                +"Transfer File"
+                            }
+                        }
+                        if (account.admin) {
+                            li {
+                                Link {
+                                    attrs.to = "/create-account"
+                                    +"Create New Account"
+                                }
+                            }
+                            li {
+                                Link {
+                                    attrs.to = "/statistics"
+                                    +"Statistics"
+                                }
+                            }
+                        }
+                        li {
+                            a {
+                                attrs.onClick = { doLogout() }
+                                +"Logout"
+                            }
                         }
                     }
                 }
@@ -164,5 +170,8 @@ val NavBarComponent = fc<NavBaProps>("NavBarComponent") { props ->
 }
 
 fun RBuilder.navBar(handler: NavBaProps.() -> Unit) = child(NavBarComponent) {
-    attrs { handler() }
+    attrs {
+        requireUser = true
+        handler()
+    }
 }

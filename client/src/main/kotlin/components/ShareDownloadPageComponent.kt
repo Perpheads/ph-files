@@ -34,6 +34,7 @@ val ShareDownloadComponent = fc<Props>("ShareDownloadComponent") {
         navBar {
             message = "Download File"
             showSearchBar = false
+            requireUser = false
             onSearchChanged = {}
         }
         div("container") {

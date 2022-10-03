@@ -1,7 +1,6 @@
 package com.perpheads.files
 
 import com.perpheads.files.components.*
-import com.perpheads.files.data.AccountInfo
 import com.perpheads.files.data.AccountInfoV2
 import kotlinx.browser.document
 import kotlinx.browser.window
@@ -12,7 +11,7 @@ import react.dom.client.createRoot
 import react.router.NavigateFunction
 import react.router.Route
 import react.router.Routes
-import react.router.dom.*
+import react.router.dom.HashRouter
 import react.router.useNavigate
 
 fun NavigateFunction.replace(route: String) {
@@ -24,12 +23,19 @@ fun logout(navigate: NavigateFunction) {
     navigate.replace("/")
 }
 
-inline fun logoutIfUnauthorized(navigate: NavigateFunction, block: () -> Unit) {
+/**
+ * Logs out if [navigate] is not null and the user is not authorized.
+ */
+inline fun catchUnauthorized(navigate: NavigateFunction?, block: () -> Unit) {
     try {
         block()
     } catch (e: ApiClient.UnauthorizedException) {
-        logout(navigate)
+        navigate?.let { logout(it) }
     }
+}
+
+inline fun logoutIfUnauthorized(navigate: NavigateFunction, block: () -> Unit) {
+    catchUnauthorized(navigate, block)
 }
 
 class AccountContextData(
@@ -40,7 +46,7 @@ class AccountContextData(
 
 val AccountContext = createContext<AccountContextData>()
 
-fun useAccount(): Pair<AccountInfoV2?, StateSetter<AccountInfoV2?>> {
+fun useAccount(required: Boolean = true): Pair<AccountInfoV2?, StateSetter<AccountInfoV2?>> {
     val contextData = useContext(AccountContext)
     val navigate = useNavigate()
 
@@ -48,7 +54,7 @@ fun useAccount(): Pair<AccountInfoV2?, StateSetter<AccountInfoV2?>> {
         if (contextData.account != null || contextData.loadingAccount) return@useEffectOnce
         contextData.loadingAccount = true
         ApiClient.mainScope.launch {
-            logoutIfUnauthorized(navigate) {
+            catchUnauthorized(navigate.takeIf { required }) {
                 contextData.setAccount(ApiClient.getAccountInfo())
                 contextData.loadingAccount = false
             }
