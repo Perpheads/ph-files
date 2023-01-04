@@ -5,10 +5,7 @@ import com.perpheads.files.wrappers.axios
 import com.perpheads.files.wrappers.axiosDelete
 import com.perpheads.files.wrappers.axiosGet
 import com.perpheads.files.wrappers.axiosPost
-import com.perpheads.files.data.ShareFileResponse
-import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
-import kotlinx.css.em
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.w3c.files.File
@@ -55,6 +52,11 @@ object ApiClient {
 
     suspend fun deleteFile(link: String) {
         return axiosDelete("/${link}")
+    }
+
+    suspend fun renameFile(link: String, newName: String) {
+        val body = RenameFileRequest(newName)
+        return axiosPost("/${link}", body)
     }
 
     suspend fun getAccountInfo(): AccountInfoV2 {

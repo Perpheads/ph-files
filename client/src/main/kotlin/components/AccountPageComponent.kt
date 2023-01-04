@@ -86,6 +86,12 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
         }
     }
 
+    suspend fun doRename(file: FileResponse, newName: String) {
+        logoutIfUnauthorized(navigate) {
+            ApiClient.renameFile(file.link, newName)
+        }
+    }
+
     useEffect(location) {
         ApiClient.mainScope.launch {
             loadFiles()
@@ -131,6 +137,15 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
                         ApiClient.mainScope.launch {
                             doDelete(file)
                             val newFiles = files.filter { file.fileId != it.fileId }
+                            files = newFiles
+                        }
+                    }
+                    renameFile = { file, newName ->
+                        ApiClient.mainScope.launch {
+                            doRename(file, newName)
+                            val newFiles = files.map {
+                                if (file.fileId == it.fileId) it.copy(fileName = newName) else it
+                            }
                             files = newFiles
                         }
                     }
