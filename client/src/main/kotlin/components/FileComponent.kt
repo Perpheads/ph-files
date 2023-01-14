@@ -54,10 +54,10 @@ val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
                             if (props.file.fileName != newName) {
                                 if (validateFilename(newName)) {
                                     props.renameFile(props.file, newName)
-                                    (event.target as HTMLInputElement).blur()
                                 } else {
                                     showToast("Invalid filename")
                                 }
+                                (event.target as HTMLInputElement).blur()
                             }
                         }
                     }
