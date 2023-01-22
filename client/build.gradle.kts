@@ -1,13 +1,18 @@
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.Mode
+
 plugins {
     kotlin("js")
     kotlin("plugin.serialization")
 }
 
-val kotlinWrappersVersion = "1.0.0-pre.390"
+val kotlinWrappersVersion = "1.0.0-pre.479"
 
 kotlin {
     js(IR) {
         browser {
+            webpackTask {
+                mode = if (System.getenv("DEVELOPMENT") == "true") Mode.DEVELOPMENT else Mode.PRODUCTION
+            }
             binaries.executable()
         }
     }
@@ -23,8 +28,10 @@ dependencies {
     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-styled")
-    implementation(npm("@emotion/react", "11.10.4"))
-    implementation(npm("@emotion/styled", "11.10.4"))
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-styled")
 }
 
 

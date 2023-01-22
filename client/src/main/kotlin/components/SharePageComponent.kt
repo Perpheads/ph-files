@@ -8,8 +8,7 @@ import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
-import org.w3c.files.File
-import org.w3c.files.get
+import js.core.get
 import react.Props
 import react.dom.*
 import react.fc
@@ -20,6 +19,7 @@ import styled.css
 import styled.styledButton
 import styled.styledDiv
 import styled.styledInput
+import web.file.File
 
 val ShareComponent = fc<Props>("ShareComponent") {
     val navigate = useNavigate()

@@ -2,29 +2,48 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.replace
+import csstype.*
+import js.core.jso
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
-import kotlinx.css.*
-import kotlinx.html.InputType
-import kotlinx.html.js.onChangeFunction
-import org.w3c.dom.HTMLInputElement
+import mui.icons.material.CheckBox
+import mui.material.*
+import mui.material.styles.Theme
+import mui.material.styles.TypographyVariant
+import mui.material.styles.createTheme
+import mui.material.styles.useTheme
+import mui.system.ThemeOptions
+import mui.system.ThemeProvider
+import mui.system.sx
 import react.*
-import react.dom.*
+import react.dom.html.ReactHTML.div
 import react.dom.events.KeyboardEventHandler
+import react.dom.html.ButtonType
+import react.dom.html.ReactHTML
+import react.dom.html.ReactHTML.form
+import react.dom.html.ReactHTML.h1
+import react.dom.html.ReactHTML.h2
+import react.dom.html.ReactHTML.main
+import react.dom.img
+import react.dom.onChange
 import react.router.Navigate
-import react.router.dom.Link
 import react.router.useNavigate
-import styled.*
+import web.html.HTMLInputElement
+import web.html.InputType
 
 external interface LoginCardComponentProps : Props {
     var setError: StateSetter<String?>
 }
 
 val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { props ->
-    val (username, setUsername) = useState("")
-    val (password, setPassword) = useState("")
-    val (remember, setRemember) = useState(false)
+    var username by useState("")
+    var password by useState("")
+    var remember by useState(false)
+    val theme = useTheme<Theme>()
     val navigate = useNavigate()
+
+    val logo = if (theme.palette.mode == PaletteMode.dark) "/logo-dark.png" else "logo.png"
+
 
     useEffectOnce {
         ApiClient.mainScope.launch {
@@ -51,54 +70,98 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { pro
         }
     }
 
-    val onEnterPressed: KeyboardEventHandler<*> = { event ->
-        if (event.key == "Enter") {
-            login()
+    Box {
+        attrs.sx {
+            display = Display.flex
+            flexDirection = FlexDirection.column
+            alignItems = AlignItems.center
         }
-    }
 
-    div("valign-wrapper row log-in") {
-        div("col card hoverable s10 pull-s1 m6 pull-m3 l4 pull-l4 shake animated") {
-            div("card-content") {
-                span("card-title") {
-                    +"Enter your details"
-                }
-                div("row") {
-                    div("input-field col s11") {
-                        input(type = InputType.text) {
-                            attrs.placeholder = "Username"
-                            attrs.onChangeFunction = { event ->
-                                setUsername((event.target as HTMLInputElement).value)
-                            }
-                            attrs.onKeyPress = onEnterPressed
-                        }
-                    }
-                    div("input-field col s11") {
-                        input(type = InputType.password, classes = "validate") {
-                            attrs.placeholder = "Password"
-                            attrs.onChangeFunction = { event ->
-                                setPassword((event.target as HTMLInputElement).value)
-                            }
-                            attrs.onKeyPress = onEnterPressed
-                        }
-                    }
-                    div("center-align") {
-                        label {
-                            styledInput(type = InputType.checkBox) {
-                                attrs.onChangeFunction = { event ->
-                                    setRemember((event.target as HTMLInputElement).checked)
-                                }
-                            }
-                            span { +"Remember Me" }
-                        }
-                    }
+        Box {
+            attrs.sx {
+                marginTop = 100.px
+                marginBottom = 50.px
+            }
+            img {
+                attrs.src = logo
+            }
+        }
+
+        Paper {
+            attrs {
+                sx {
+                    padding = 24.px
+                    display = Display.flex
+                    alignItems = AlignItems.center
+                    flexDirection = FlexDirection.column
                 }
             }
 
-            div("card-action right-align") {
-                button(classes = "btn waves-effect waves-light") {
-                    +"Login"
-                    attrs.onClick = { login() }
+            Typography {
+                attrs.component = h1
+                attrs.variant = TypographyVariant.h4
+                +"Enter your details"
+            }
+
+            Box {
+                attrs.component = form
+                attrs.sx {
+                    marginTop = 2.px
+                }
+                attrs.onSubmit = {
+                    it.preventDefault()
+                    login()
+                }
+
+                TextField {
+                    attrs {
+                        margin = FormControlMargin.normal
+                        required = true
+                        fullWidth = true
+                        name = "username"
+                        label = ReactNode("Username")
+                        onChange = {
+                            username = (it.target as HTMLInputElement).value
+                        }
+                    }
+                }
+
+                TextField {
+                    attrs {
+                        margin = FormControlMargin.normal
+                        required = true
+                        fullWidth = true
+                        type = InputType.password
+                        name = "password"
+                        label = ReactNode("Password")
+                        onChange = {
+                            password = (it.target as HTMLInputElement).value
+                        }
+                    }
+                }
+
+                FormControlLabel {
+                    attrs.label = ReactNode("Remember me")
+                    attrs.control = Checkbox.create {
+                        value = "remember"
+                        checked = remember
+                        onChange = { _, checked ->
+                            remember = checked
+                        }
+                    }
+                }
+
+                Button {
+                    attrs {
+                        type = ButtonType.submit
+                        fullWidth = true
+                        variant = ButtonVariant.contained
+                        sx {
+                            marginTop = 5.px
+                            marginBottom = 2.px
+                        }
+                    }
+                    +"Sign In"
                 }
             }
         }
@@ -107,44 +170,52 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { pro
 
 
 val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
-    val (error, errorSet) = useState<String?>(null)
+    val navigate = useNavigate()
+
+    val paletteMode = if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        PaletteMode.dark
+    }  else {
+        PaletteMode.light
+    }
+
+    val theme = createTheme(jso {
+        palette = jso {
+            mode = paletteMode
+        }
+    })
+
     if (window.localStorage.getItem("loggedIn") == "yes") {
         Navigate {
             attrs.to = "/account"
         }
     }
-    div {
-        div("center-align") {
-            styledImg(src = "/logo.png") {
-                css {
-                    marginBottom = 100.px
-                    marginTop = 100.px
-                }
+    ThemeProvider {
+        attrs.theme = theme
+        Container {
+            attrs.component = main
+            attrs.maxWidth = "sm"
+
+            CssBaseline { }
+
+            loginCardComponent {
+
             }
         }
-        if (error != null) {
-            styledDiv {
-                css {
-                    classes += "center-align"
-                    color = Color.red
-                    alignSelf = Align.center
-                }
-                +error
-            }
-        }
-        loginCardComponent { setError = errorSet }
-    }
-
-    styledDiv {
-        css {
-            position = Position.fixed
-            right = 16.px
-            bottom = 10.px
-            fontSize = 22.px
-        }
-
         Link {
-            attrs.to = "/contact"
+            attrs {
+                variant = ReactHTML.h5
+                underline = LinkUnderline.none
+                href = "#"
+                sx {
+                    position = Position.absolute
+                    right = 15.px
+                    bottom = 15.px
+                }
+                onClick = {
+                    it.preventDefault()
+                    navigate.replace("/contact")
+                }
+            }
             +"Contact"
         }
     }

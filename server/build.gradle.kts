@@ -41,11 +41,6 @@ docker {
     }
 }
 
-val browserDist by configurations.creating {
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
-
 dependencies {
     implementation(project(":shared"))
     implementation(kotlin("stdlib-common"))
@@ -82,15 +77,6 @@ dependencies {
     implementation("io.insert-koin:koin-ktor:$koin_version")
     runtimeOnly("mysql:mysql-connector-java:$mysql_version")
     jooqGenerator("mysql:mysql-connector-java:$mysql_version")
-
-    browserDist(
-        project(
-            mapOf(
-                "path" to ":client",
-                "configuration" to "browserDist"
-            )
-        )
-    )
 }
 
 val filesDatabaseHost = System.getenv("FILES_DB_HOST") ?: "localhost"
@@ -163,8 +149,4 @@ tasks.getByName("compileKotlin") {
 tasks.getByName<JavaExec>("run") {
     dependsOn(tasks.getByName<Jar>("jar"))
     classpath(tasks.getByName<Jar>("jar"))
-}
-
-tasks.withType<Copy>().named("processResources") {
-    from(browserDist)
 }

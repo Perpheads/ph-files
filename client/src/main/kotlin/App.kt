@@ -2,10 +2,8 @@ package com.perpheads.files
 
 import com.perpheads.files.components.*
 import com.perpheads.files.data.AccountInfoV2
-import kotlinx.browser.document
-import kotlinx.browser.window
+import js.core.jso
 import kotlinx.coroutines.launch
-import kotlinx.js.jso
 import react.*
 import react.dom.client.createRoot
 import react.router.NavigateFunction
@@ -13,13 +11,15 @@ import react.router.Route
 import react.router.Routes
 import react.router.dom.HashRouter
 import react.router.useNavigate
+import web.dom.document
+import web.window.window
 
 fun NavigateFunction.replace(route: String) {
     this(route, jso { replace = true })
 }
 
 fun logout(navigate: NavigateFunction) {
-    window.localStorage.removeItem("loggedIn")
+    kotlinx.browser.window.localStorage.removeItem("loggedIn")
     navigate.replace("/")
 }
 

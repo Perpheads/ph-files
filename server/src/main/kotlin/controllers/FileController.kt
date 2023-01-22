@@ -160,6 +160,7 @@ fun Route.fileRoutes(
 
 
     get<FileRoute> {
+        println("2352354442345")
         val md5Header = call.request.headers["If-None-Match"]?.lowercase()
         val file = withContext(Dispatchers.IO) {
             fileDao.findByLink(it.link)

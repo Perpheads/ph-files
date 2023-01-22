@@ -2,10 +2,10 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.data.ShareFileResponse
+import js.core.get
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
-import kotlinx.js.get
 import react.*
 import react.dom.div
 import react.dom.onClick

@@ -7,8 +7,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.w3c.dom.WebSocket
-import org.w3c.files.File
+import web.file.File
+import websockets.WebSocket
 
 class WebSocketSender(private val path: String, private val file: File) {
     private lateinit var socket: WebSocket
@@ -35,8 +35,8 @@ class WebSocketSender(private val path: String, private val file: File) {
             var sent = 0.0
             while (sent < file.size.toDouble()) {
                 tokenChannel.receive()
-                val end = (sent + chunkSize).coerceAtMost(file.size.toDouble())
-                socket.send(file.slice(sent.unsafeCast<Int>(), end.unsafeCast<Int>()))
+                val end = (sent + chunkSize).coerceAtMost(file.size)
+                socket.send(file.slice(sent, end))
                 sent = end
                 if (!finalCallbackCalled) {
                     onProgress(sent.toLong())

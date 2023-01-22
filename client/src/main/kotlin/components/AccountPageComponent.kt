@@ -3,14 +3,12 @@ package com.perpheads.files.components
 import com.perpheads.files.*
 import com.perpheads.files.ApiClient.uploadFile
 import com.perpheads.files.data.FileResponse
+import js.core.asList
 import kotlinx.browser.document
 import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.html.InputType
 import kotlinx.html.id
-import org.w3c.dom.HTMLInputElement
-import org.w3c.dom.asList
-import org.w3c.files.File
 import react.Props
 import react.dom.*
 import react.fc
@@ -20,6 +18,8 @@ import react.useEffect
 import react.useState
 import styled.css
 import styled.styledDiv
+import web.file.File
+import web.html.HTMLInputElement
 
 external interface AccountPageProps : Props {
 }

@@ -30,6 +30,8 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.websocket.*
 import org.flywaydb.core.Flyway
 import org.koin.core.context.startKoin
+import org.koin.ktor.ext.inject
+import org.koin.ktor.plugin.Koin
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.time.Duration
@@ -46,20 +48,21 @@ fun Application.module(testing: Boolean = false) {
     logger.info("Starting application")
 
     logger.info("Starting Koin")
-    val koin = startKoin {
+
+    install(Koin) {
         modules(PhFilesModule.module)
-    }.koin
+    }
 
     logger.info("Starting flyway migration")
-    val flyway = koin.get<Flyway>()
+    val flyway by inject<Flyway>()
     flyway.migrate()
     logger.info("Flyway migration successful")
 
-    val userDao = koin.get<UserDao>()
-    val cookieDao = koin.get<CookieDao>()
-    val fileDao = koin.get<FileDao>()
+    val userDao by inject<UserDao>()
+    val cookieDao by inject<CookieDao>()
+    val fileDao by inject<FileDao>()
 
-    val phConfig = koin.get<PhFilesConfig>()
+    val phConfig by inject<PhFilesConfig>()
 
     install(AutoHeadResponse)
     install(DataConversion) { }
@@ -110,6 +113,7 @@ fun Application.module(testing: Boolean = false) {
         } else {
             allowHost(phConfig.cors.host, schemes = listOf("http", "https"))
         }
+        allowCredentials = true
     }
 
     install(CallLogging) {
@@ -140,7 +144,7 @@ fun Application.module(testing: Boolean = false) {
                         path = "/",
                         domain = phConfig.cookie.domain
                     )
-                    call.respond(message = cause.content ?: "", status = io.ktor.http.HttpStatusCode.Unauthorized)
+                    call.respond(message = cause.content ?: "", status = HttpStatusCode.Unauthorized)
                 }
                 is HttpException -> {
                     call.respond(message = cause.content ?: "", status = cause.statusCode)
