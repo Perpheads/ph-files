@@ -9,6 +9,7 @@ import mui.material.*
 import mui.material.Size
 import mui.material.styles.TypographyVariant
 import mui.material.styles.createTheme
+import mui.system.Breakpoint
 import mui.system.ThemeProvider
 import mui.system.sx
 import react.*
@@ -32,6 +33,9 @@ private val SidebarMenu = fc<Props> {
                 color = IconButtonColor.inherit
                 onClick = {
                     anchorEl = it.currentTarget
+                }
+                sx {
+                    marginRight = 10.px
                 }
             }
 
@@ -62,10 +66,9 @@ private val SidebarMenu = fc<Props> {
 }
 
 val Page = fc<PageProps> { props ->
-
     val paletteMode = if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
         PaletteMode.dark
-    }  else {
+    } else {
         PaletteMode.light
     }
 
@@ -88,33 +91,45 @@ val Page = fc<PageProps> { props ->
             AppBar {
                 attrs.component = ReactHTML.nav
                 Toolbar {
-                    Typography {
-                        attrs.variant = TypographyVariant.h5
-                        +"Hello There!"
-                    }
-                    /*
-                    SearchBar {
-                        Input {
-                            attrs.defaultValue = "Hello"
-                        }
-                    }*/
-                    Box {
+                    Container {
+                        attrs.maxWidth = "lg"
                         attrs.sx {
-                            flexGrow = number(1.0)
+                            display = Display.flex
+                            alignItems = AlignItems.center
+                            flexDirection = FlexDirection.row
                         }
+
+                        Typography {
+                            attrs.variant = TypographyVariant.h5
+                            attrs.sx {
+                                marginLeft = 10.px
+                            }
+                            +"Hello There!"
+                        }
+                        Box {
+                            attrs.sx {
+                                flexGrow = number(1.0)
+                                theme.breakpoints.only(Breakpoint.xs).invoke {
+                                    display = "none".asDynamic() as? Display
+                                }
+                                theme.breakpoints.only(Breakpoint.sm).invoke {
+                                    display = Display.flex
+                                }
+                            }
+                        }
+                        props.onSearch?.let { onSearch ->
+                            SearchBar {
+                                SearchIconWrapper {
+                                    Search { }
+                                }
+                                StyledInputBase {
+                                    attrs.placeholder = "Search..."
+                                }
+                            }
+                        }
+
+                        SidebarMenu { }
                     }
-
-                    SearchBar {
-                        SearchIconWrapper {
-                            Search { }
-                        }
-                        StyledInputBase {
-                            attrs.placeholder = "Search..."
-                        }
-                    }
-
-                    SidebarMenu { }
-
                 }
             }
             Toolbar { }
@@ -122,7 +137,7 @@ val Page = fc<PageProps> { props ->
             Container {
                 attrs.maxWidth = "lg"
                 attrs.sx {
-                    paddingTop = 16.px
+                    paddingTop = 32.px
                 }
                 Paper {
                     attrs.sx {

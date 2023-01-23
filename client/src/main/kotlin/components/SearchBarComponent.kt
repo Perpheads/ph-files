@@ -20,7 +20,7 @@ val SearchBar = ReactHTML.div.styled { _, theme ->
     }
     theme.breakpoints.up(Breakpoint.sm).invoke {
         marginLeft = theme.spacing(3)
-        width = Length.intrinsic
+        width = "auto".asDynamic() as? Width
     }
 }
 
@@ -43,6 +43,9 @@ val StyledInputBase = InputBase.styled {_, theme ->
         width = 100.pct
         theme.breakpoints.up(Breakpoint.md).invoke {
             width = 20.ch
+            "&:focus" {
+                width = 26.ch
+            }
         }
     }
 }

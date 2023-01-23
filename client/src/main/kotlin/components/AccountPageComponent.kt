@@ -3,24 +3,17 @@ package com.perpheads.files.components
 import com.perpheads.files.*
 import com.perpheads.files.ApiClient.uploadFile
 import com.perpheads.files.data.FileResponse
-import js.core.asList
-import kotlinx.browser.document
+import csstype.pct
 import kotlinx.coroutines.launch
-import kotlinx.css.*
-import kotlinx.html.InputType
-import kotlinx.html.id
-import mui.material.Typography
-import react.Props
-import react.dom.*
-import react.fc
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import mui.material.*
+import mui.material.styles.TypographyVariant
+import mui.system.sx
+import react.*
 import react.router.useLocation
 import react.router.useNavigate
-import react.useEffect
-import react.useState
-import styled.css
-import styled.styledDiv
 import web.file.File
-import web.html.HTMLInputElement
 
 external interface AccountPageProps : Props {
 }
@@ -29,6 +22,18 @@ private fun <T> List<T>.prepend(elem: T): List<T> {
     val newList = toMutableList()
     newList.add(0, elem)
     return newList
+}
+
+private fun RBuilder.tableHeader(text: String) {
+    TableCell {
+        Typography {
+            attrs {
+                variant = TypographyVariant.h6
+            }
+            +text
+        }
+    }
+
 }
 
 val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
@@ -96,100 +101,40 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     Page {
         attrs {
             name = "Hello there!"
+            onSearch = {
+
+            }
         }
 
-        Typography {
-            +"Hello"
+        TableContainer {
+            attrs.sx {
+                width = 100.pct
+            }
+            Table {
+                TableHead {
+                    TableRow {
+                        tableHeader("Name")
+                        tableHeader("Date")
+                        tableHeader("Size")
+                        tableHeader("")
+                    }
+                }
+                TableBody {
+                    file {
+                        file = FileResponse(
+                            fileId = 1,
+                            link = "ABHDGKGAW",
+                            fileName = "test.jpg",
+                            mimeType = "image/jpeg",
+                            uploadDate = Clock.System.now(),
+                            formattedUploadDate = "22.02.2022 13:00",
+                            size = 12315623,
+                            thumbnail = "test.png",
+                            hasThumbnail = false
+                        )
+                    }
+                }
+            }
         }
     }
-
-    /*
-
-    div {
-        navBar {
-            val username = account?.username
-            message = if (username != null) {
-                "Hey there, $username."
-            } else {
-                "Hey there."
-            }
-            this.search = search
-            showSearchBar = true
-            onSearchChanged = {
-                changeUrl(1, it)
-            }
-        }
-        div("container") {
-            attrs {
-                onDragOver = { it.preventDefault() }
-                onDrop = { event ->
-                    event.preventDefault()
-                    event.dataTransfer.files.asList().forEach { file ->
-                        doUploadFile(file)
-                    }
-                }
-            }
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
-                    paddingBottom = 18.px
-                    height = 100.pct
-                    paddingTop = 10.px
-                    paddingRight = 10.px
-                    paddingLeft = 10.px
-                }
-                fileList {
-                    this.files = files
-                    deleteFile = { file ->
-                        ApiClient.mainScope.launch {
-                            doDelete(file)
-                            val newFiles = files.filter { file.fileId != it.fileId }
-                            files = newFiles
-                        }
-                    }
-                }
-                paginationComponent {
-                    this.paginationData = paginationData
-                    this.onPageChange = {
-                        changeUrl(it, search)
-                    }
-                }
-            }
-        }
-        if (queueFiles.isNotEmpty()) {
-            styledDiv {
-                css {
-                    position = Position.absolute
-                    bottom = 16.px
-                    left = 24.px
-                    minWidth = 30.pct
-                }
-                uploadQueue {
-                    entries = queueFiles
-                }
-            }
-        }
-        div("fixed-action-btn") {
-            a(classes = "btn-floating btn-large red") {
-                attrs.onClick = { _ ->
-                    document.getElementById("file-input")?.let { elem ->
-                        (elem as HTMLInputElement).click()
-                    }
-                }
-                i("large material-icons") {
-                    +"add"
-                }
-                input(InputType.file) {
-                    attrs.id = "file-input"
-                    attrs.onChange = { event ->
-                        (event.target as HTMLInputElement).files?.let { inputFiles ->
-                            inputFiles.asList().forEach { file ->
-                                doUploadFile(file)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }*/
 }
