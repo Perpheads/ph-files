@@ -124,15 +124,6 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
                         tableHeader("Size")
                         tableHeader("")
                     }
-                    renameFile = { file, newName ->
-                        ApiClient.mainScope.launch {
-                            doRename(file, newName)
-                            val newFiles = files.map {
-                                if (file.fileId == it.fileId) it.copy(fileName = newName) else it
-                            }
-                            files = newFiles
-                        }
-                    }
                 }
                 TableBody {
                     file {
@@ -147,6 +138,21 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
                             thumbnail = "test.png",
                             hasThumbnail = false
                         )
+
+                        deleteFile = { file ->
+
+                        }
+
+
+                        renameFile = { file, newName ->
+                            ApiClient.mainScope.launch {
+                                doRename(file, newName)
+                                val newFiles = files.map {
+                                    if (file.fileId == it.fileId) it.copy(fileName = newName) else it
+                                }
+                                files = newFiles
+                            }
+                        }
                     }
                 }
             }
