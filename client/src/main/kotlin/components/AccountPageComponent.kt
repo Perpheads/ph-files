@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.html.InputType
 import kotlinx.html.id
+import mui.material.Typography
 import react.Props
 import react.dom.*
 import react.fc
@@ -91,6 +92,18 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
             loadFiles()
         }
     }
+
+    Page {
+        attrs {
+            name = "Hello there!"
+        }
+
+        Typography {
+            +"Hello"
+        }
+    }
+
+    /*
 
     div {
         navBar {
@@ -178,5 +191,5 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
                 }
             }
         }
-    }
+    }*/
 }

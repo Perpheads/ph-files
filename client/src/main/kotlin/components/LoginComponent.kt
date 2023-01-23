@@ -32,10 +32,10 @@ import web.html.HTMLInputElement
 import web.html.InputType
 
 external interface LoginCardComponentProps : Props {
-    var setError: StateSetter<String?>
 }
 
-val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { props ->
+val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
+    var error by useState<String?>(null)
     var username by useState("")
     var password by useState("")
     var remember by useState(false)
@@ -55,17 +55,17 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { pro
     }
 
     fun login() {
-        props.setError(null)
+        error = null
         ApiClient.mainScope.launch {
             try {
                 val response = ApiClient.authenticate(username, password, remember)
-                props.setError(response.error)
+                error = response.error
                 if (response.error == null) {
                     window.localStorage.setItem("loggedIn", "yes")
                     navigate.replace("/account")
                 }
             } catch (e: Exception) {
-                props.setError("An unknown error occurred")
+                error = "An unknown error occurred"
             }
         }
     }
@@ -150,6 +150,10 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { pro
                         }
                     }
                 }
+                FormHelperText {
+                    attrs.error = error != null
+                    +(error ?: " ")
+                }
 
                 Button {
                     attrs {
@@ -157,7 +161,7 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { pro
                         fullWidth = true
                         variant = ButtonVariant.contained
                         sx {
-                            marginTop = 5.px
+                            marginTop = 3.px
                             marginBottom = 2.px
                         }
                     }
@@ -197,9 +201,7 @@ val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
 
             CssBaseline { }
 
-            loginCardComponent {
-
-            }
+            LoginCardComponent { }
         }
         Link {
             attrs {
@@ -219,8 +221,4 @@ val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
             +"Contact"
         }
     }
-}
-
-fun RBuilder.loginCardComponent(handler: LoginCardComponentProps.() -> Unit) = child(LoginCardComponent) {
-    attrs { handler() }
 }
