@@ -1,15 +1,15 @@
 package com.perpheads.files.components
 
 import com.perpheads.files.data.FileResponse
-import react.RBuilder
 import react.Props
-import react.StateSetter
+import react.RBuilder
 import react.dom.*
 import react.fc
 
 external interface FileListComponentProps : Props {
     var files: List<FileResponse>
     var deleteFile: (FileResponse) -> Unit
+    var renameFile: (FileResponse, String) -> Unit
 }
 
 val FileListComponent = fc<FileListComponentProps>("FileListComponent") { props ->
@@ -20,7 +20,7 @@ val FileListComponent = fc<FileListComponentProps>("FileListComponent") { props 
                 th { +"Name" }
                 th { +"Date" }
                 th { +"Size" }
-                th { +"Delete" }
+                th { +"" }
             }
         }
         tbody {
@@ -28,6 +28,7 @@ val FileListComponent = fc<FileListComponentProps>("FileListComponent") { props 
                 file {
                     file = f
                     deleteFile = props.deleteFile
+                    renameFile = props.renameFile
                 }
             }
         }

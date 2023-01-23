@@ -3,22 +3,18 @@ package com.perpheads.files.controllers
 import com.perpheads.files.*
 import com.perpheads.files.NotFoundException
 import com.perpheads.files.daos.FileDao
-import com.perpheads.files.data.File
-import com.perpheads.files.data.FileResponse
-import com.perpheads.files.data.UploadResponse
-import io.ktor.server.application.*
-import io.ktor.server.plugins.BadRequestException
+import com.perpheads.files.data.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.locations.*
 import io.ktor.server.locations.post
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.routing.delete
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinInstant
@@ -99,6 +95,9 @@ fun Route.fileRoutes(
     }
 
     suspend fun upload(userId: Int, filePart: PartData.FileItem): File {
+        filePart.originalFileName?.let {
+            if (!validateFilename(it)) { throw BadRequestException("Invalid filename") }
+        }
         val randomFileName = secureRandom.alphaNumeric(16)
         val link = randomFileName + getFileExtensionFromName(filePart.originalFileName ?: "")
         val mimeType = (filePart.contentType ?: ContentType.Application.OctetStream).toString()
@@ -241,6 +240,23 @@ fun Route.fileRoutes(
                     hasThumbnail = file.thumbnail != null
                 )
             )
+        }
+
+        post<FileRoute> { request ->
+            val newName = call.receive<RenameFileRequest>().newName
+            if (!validateFilename(newName)) {
+                throw BadRequestException("Invalid filename")
+            }
+            val file = withContext(Dispatchers.IO) {
+                fileDao.findByLink(request.link)
+            } ?: throw NotFoundException("File not found")
+            if (file.userId != call.user().userId) {
+                throw ForbiddenException("Not your file!")
+            }
+            withContext(Dispatchers.IO) {
+                fileDao.rename(file.fileId, newName)
+            }
+            call.respondText("")
         }
 
         delete<FileRoute> { request ->

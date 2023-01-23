@@ -81,6 +81,7 @@ You can of course also use the docker image with Kubernetes or Docker Compose.
 
 - IntelliJ IDE or Gradle
 - MySQL or MariaDB as a database
+- JDK 17+
 
 This project uses [Jooq](https://www.jooq.org/) in combination
 with [Flyway](https://flywaydb.org/) to migrate an existing

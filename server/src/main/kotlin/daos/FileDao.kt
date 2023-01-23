@@ -33,6 +33,17 @@ class FileDao(conf: Configuration) {
             .execute()
     }
 
+    fun rename(
+        fileId: Int,
+        name: String,
+        create: DSLContext = dslContext
+    ) {
+        create.update(FILES)
+            .set(FILES.FILE_NAME, name)
+            .where(FILES.FILE_ID.eq(fileId))
+            .execute()
+    }
+
     fun getThumbnails(fileIds: List<Int>, userId: Int, create: DSLContext = dslContext): List<Pair<Int, ByteArray>> {
         return create.select(FILES.FILE_ID, FILES.THUMBNAIL)
             .from(FILES)
