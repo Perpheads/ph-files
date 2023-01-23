@@ -42,7 +42,7 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
     val theme = useTheme<Theme>()
     val navigate = useNavigate()
 
-    val logo = if (theme.palette.mode == PaletteMode.dark) "/logo-dark.png" else "logo.png"
+    val logoPath = if (theme.palette.mode == PaletteMode.dark) "/logo-dark.png" else "logo.png"
 
 
     useEffectOnce {
@@ -83,7 +83,7 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
                 marginBottom = 50.px
             }
             img {
-                attrs.src = logo
+                attrs.src = ApiClient.getLocalLink(logoPath)
             }
         }
 

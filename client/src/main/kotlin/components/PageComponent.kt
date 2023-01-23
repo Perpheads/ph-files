@@ -14,12 +14,13 @@ import mui.system.ThemeProvider
 import mui.system.sx
 import react.*
 import react.dom.html.ReactHTML
-import react.router.Navigate
 import web.html.HTMLButtonElement
+import web.html.HTMLInputElement
 
 external interface PageProps : PropsWithChildren {
     var name: String
-    var onSearch: ((String) -> Unit)?
+    var searchBarEnabled: Boolean
+    var onSearchChanged: ((String) -> Unit)?
 }
 
 private val SidebarMenu = fc<Props> {
@@ -104,7 +105,7 @@ val Page = fc<PageProps> { props ->
                             attrs.sx {
                                 marginLeft = 10.px
                             }
-                            +"Hello There!"
+                            +props.name
                         }
                         Box {
                             attrs.sx {
@@ -117,15 +118,23 @@ val Page = fc<PageProps> { props ->
                                 }
                             }
                         }
-                        props.onSearch?.let { onSearch ->
+                        if (props.searchBarEnabled) {
                             SearchBar {
                                 SearchIconWrapper {
                                     Search { }
                                 }
                                 StyledInputBase {
                                     attrs.placeholder = "Search..."
+
+                                    attrs.onChange = { elem ->
+                                        props.onSearchChanged?.let {
+                                            it.invoke((elem.currentTarget as HTMLInputElement).value)
+                                        }
+                                    }
                                 }
                             }
+                        }
+                        props.onSearchChanged?.let { onSearch ->
                         }
 
                         SidebarMenu { }

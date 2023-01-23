@@ -10,6 +10,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import web.file.File
 import web.http.FormData
+import web.prompts.alert
 import web.xhr.XMLHttpRequest
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -23,6 +24,11 @@ object ApiClient {
     }
 
     val host: String = if (isDevelopment()) "http://localhost:8080" else ""
+
+
+    fun getLocalLink(path: String): String {
+        return host + path
+    }
 
     object UnauthorizedException : Exception()
     object NotFoundException : Exception()
@@ -41,7 +47,7 @@ object ApiClient {
             page = page,
             entriesPerPage = entriesPerPage
         )
-        val result = axiosPost<FileListResponse, SearchRequest>("/account", request) {
+        val result = axiosPost<FileListResponse, SearchRequest>("$host/account", request) {
             parameter("include_thumbnails", "false")
         }
         return result
@@ -62,7 +68,7 @@ object ApiClient {
 
     suspend fun renameFile(link: String, newName: String) {
         val body = RenameFileRequest(newName)
-        return axiosPost("/${link}", body)
+        return axiosPost("$host/${link}", body)
     }
 
     suspend fun getAccountInfo(): AccountInfoV2 {

@@ -1,19 +1,19 @@
 package com.perpheads.files.components
 
+import com.perpheads.files.ApiClient
 import com.perpheads.files.data.FileResponse
 import com.perpheads.files.data.validateFilename
-import csstype.AlignItems
-import csstype.Display
-import csstype.FlexDirection
-import csstype.px
+import csstype.*
 import mui.icons.material.DeleteOutline
 import mui.icons.material.Edit
 import mui.icons.material.MoreVert
 import mui.material.*
+import mui.material.Size
 import mui.system.sx
 import react.*
 import react.dom.onChange
 import web.html.HTMLInputElement
+import web.window.WindowTarget
 
 external interface FileComponentProps : Props {
     var file: FileResponse
@@ -26,7 +26,6 @@ val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
     var invalidFileName by useState(false)
     val extension = "." + props.file.fileName.split(".").last()
 
-    val imgSrc = "/${props.file.fileId}/thumbnail"
 
     TableRow {
         TableCell {
@@ -38,10 +37,10 @@ val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
                 }
                 Avatar {
                     attrs {
-                        src = "https://files.perpheads.com/lME03h0tS1b6dNNj.jpg"
+                        src = ApiClient.getLocalLink("/${props.file.fileId}/thumbnail")
                         variant = AvatarVariant.square
                         sx {
-                            marginRight = 12.px
+                            marginRight = 20.px
                         }
                     }
                 }
@@ -50,9 +49,9 @@ val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
                         attrs {
                             margin = FormControlMargin.none
                             required = true
-                            fullWidth = true
                             autoFocus = true
                             hiddenLabel = true
+                            fullWidth = true
                             name = "Filename"
                             variant = FormControlVariant.standard
                             size = Size.small
@@ -86,42 +85,54 @@ val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
                         }
                     }
                 } else {
-                    +"Name1"
+                    Link {
+                        attrs.href = ApiClient.getLocalLink("/${props.file.link}")
+                        attrs.target = WindowTarget._blank
+                        attrs.underline = LinkUnderline.none
+                        +props.file.fileName
+                    }
                 }
             }
         }
         TableCell {
-            +"Name2"
+            +props.file.formattedUploadDate
         }
         TableCell {
-            +"Name3"
+            +props.file.humanReadableByteSize()
         }
         TableCell {
-            IconButton {
-                attrs {
-                    size = Size.small
-                    color = IconButtonColor.info
-                    onClick = {
-                        editing = true
-                        invalidFileName = false
+            Box {
+                attrs.sx {
+                    display = Display.flex
+                    flexDirection = FlexDirection.row
+                    alignItems = AlignItems.center
+                }
+                IconButton {
+                    attrs {
+                        size = Size.small
+                        color = IconButtonColor.info
+                        onClick = {
+                            editing = true
+                            invalidFileName = false
+                        }
+                    }
+
+                    Edit {
+
                     }
                 }
-
-                Edit {
-
-                }
-            }
-            IconButton {
-                attrs {
-                    size = Size.small
-                    color = IconButtonColor.error
-                    onClick = {
-                        props.deleteFile(props.file)
+                IconButton {
+                    attrs {
+                        size = Size.small
+                        color = IconButtonColor.error
+                        onClick = {
+                            props.deleteFile(props.file)
+                        }
                     }
-                }
 
-                DeleteOutline {
+                    DeleteOutline {
 
+                    }
                 }
             }
         }
