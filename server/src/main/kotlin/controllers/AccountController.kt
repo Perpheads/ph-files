@@ -35,10 +35,11 @@ import kotlin.math.min
 fun Route.accountRoutes(
     userDao: UserDao,
     cookieDao: CookieDao,
-    cookieConfig: CookieConfig,
-    fileDao: FileDao,
-    contact: ContactConfig
+    config: PhFilesConfig,
+    fileDao: FileDao
 ) {
+    val cookieConfig = config.cookie
+    val contact = config.contact
     val secureRandom = SecureRandom()
 
     suspend fun PipelineContext<Unit, ApplicationCall>.handleAuthentication(isV2: Boolean) {
@@ -75,7 +76,7 @@ fun Route.accountRoutes(
             name = "id",
             value = cookieStr,
             expires = cookieExpiryDate,
-            domain = cookieConfig.domain,
+            domain = call.getCookieDomain(config),
             secure = cookieConfig.secure,
             httpOnly = true,
             extensions = mapOf("SameSite" to "Strict"),
@@ -162,7 +163,7 @@ fun Route.accountRoutes(
                 call.response.cookies.appendExpired(
                     name = "id",
                     path = "/",
-                    domain = cookieConfig.domain
+                    domain = call.getCookieDomain(config)
                 )
                 call.respondText("")
             }

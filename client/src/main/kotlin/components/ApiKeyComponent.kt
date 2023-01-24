@@ -2,26 +2,30 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.logoutIfUnauthorized
-import com.perpheads.files.showToast
+import csstype.*
+import js.core.jso
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.css.*
-import kotlinx.html.InputType
-import kotlinx.html.classes
-import kotlinx.html.id
-import kotlinx.html.js.onClickFunction
-import react.Props
-import react.dom.*
-import react.fc
+import mui.icons.material.ContentCopy
+import mui.icons.material.Refresh
+import mui.material.*
+import mui.material.styles.Theme
+import mui.material.styles.useTheme
+import mui.system.Breakpoint
+import mui.system.sx
+import react.*
 import react.router.useNavigate
-import react.useEffectOnce
-import react.useState
-import styled.*
 
 val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
     var apiKey by useState("Loading")
     val navigate = useNavigate()
+
+    val theme = useTheme<Theme>()
+    val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
+
+    var alertColor by useState(AlertColor.info)
+    var alertText by useState<String?>(null)
 
     useEffectOnce {
         MainScope().launch {
@@ -35,7 +39,8 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
         MainScope().launch {
             logoutIfUnauthorized(navigate) {
                 apiKey = ApiClient.generateApiKey().apiKey
-                showToast("New API key generated successfully")
+                alertColor = AlertColor.success
+                alertText = "New API key generated successfully"
             }
         }
     }
@@ -58,77 +63,93 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
                 }
             """.trimIndent()
         )
-        showToast("ShareX template copied to clipboard")
+        alertColor = AlertColor.info
+        alertText = "ShareX template copied to clipboard"
     }
 
-    div {
-        navBar {
-            message = "API Key"
-            showSearchBar = false
-            onSearchChanged = {}
-        }
+    DialogTitle {
+        +"API Key"
+    }
+    Divider { }
+    DialogContent {
+        TextField {
+            attrs {
+                fullWidth = true
+                inputProps = jso<InputBaseProps> {
+                    this.readOnly = true
+                }.asDynamic() as? InputBaseComponentProps
+                label = ReactNode("API Key")
+                onFocus = {
+                    window.navigator.clipboard.writeText(apiKey)
+                    alertColor = AlertColor.info
+                    alertText = "API Key copied successfully"
+                }
 
-        div("container") {
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
-                    padding(10.px)
-                    paddingBottom = 18.px
-                    height = 100.pct
-                    minHeight = 100.pct
+                value = apiKey
+            }
+        }
+        Box {
+            attrs.sx {
+                display = Display.flex
+                flexDirection = if (smallScreen) {
+                    FlexDirection.column
+                } else {
+                    FlexDirection.row
                 }
-                div("col l4 center-align") {
-                    div("row") {
-                        div("input-field col s11") {
-                            styledInput {
-                                attrs.id = "api_key_input"
-                                attrs.disabled = true
-                                attrs.value = apiKey
-                                attrs.type = InputType.text
-                            }
-                            label {
-                                attrs.htmlFor = "api_key_input"
-                                attrs.classes += "active"
-                                +"API Key: "
-                            }
-                        }
-                        div("col s1") {
-                            button(classes = "waves-effect waves-light btn") {
-                                attrs.onClick = {
-                                    window.navigator.clipboard.writeText(apiKey)
-                                    showToast("API key copied to clipboard")
-                                }
-                                i("material-icons") {
-                                    +"content_copy"
-                                }
-                            }
-                        }
-                    }
-                    styledDiv {
-                        styledButton {
-                            css {
-                                classes += "btn waves-effect waves-light orange"
-                                marginRight = 8.px
-                            }
-                            attrs.onClickFunction = { generateApiKey() }
-                            +"Regenerate API Key"
-                            i("material-icons right") {
-                                +"refresh"
-                            }
-                        }
-                        styledButton {
-                            css {
-                                classes += "btn waves-effect waves-light"
-                                marginLeft = 8.px
-                            }
-                            attrs.onClickFunction = { copyShareXConfig() }
-                            +"Copy ShareX Uploader Config"
-                            i("material-icons right") {
-                                +"content_copy"
-                            }
-                        }
+                gap = 10.px
+                justifyContent = JustifyContent.center
+                alignItems = AlignItems.center
+                marginTop = 32.px
+                marginRight = 16.px
+                marginLeft = 16.px
+            }
+
+            Button {
+                attrs.color = ButtonColor.warning
+                attrs.variant = ButtonVariant.contained
+                attrs.endIcon = Refresh.create()
+                attrs.onClick = { generateApiKey() }
+                attrs.sx {
+                    if (smallScreen) {
+                        width = 100.pct
                     }
                 }
+                +"Regenerate API Key"
+            }
+            Button {
+                attrs.color = ButtonColor.info
+                attrs.variant = ButtonVariant.contained
+                attrs.endIcon = ContentCopy.create()
+                attrs.sx {
+                    if (smallScreen) {
+                        width = 100.pct
+                    }
+                }
+                attrs.onClick = { copyShareXConfig() }
+
+                +"Copy ShareX Config"
+            }
+        }
+    }
+
+    Snackbar {
+        attrs {
+            open = alertText != null
+            autoHideDuration = 6000
+            onClose = { _, _ ->
+                alertText = null
+            }
+        }
+        alertText?.let { text ->
+            Alert {
+                attrs.onClose = {
+                    alertText = null
+                }
+                attrs.sx {
+                    width = 100.pct
+                }
+                attrs.severity = alertColor
+                +text
             }
         }
     }

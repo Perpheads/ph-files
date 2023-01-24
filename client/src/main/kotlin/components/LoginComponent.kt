@@ -2,29 +2,24 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.replace
+import com.perpheads.files.wrappers.styled
 import csstype.*
 import js.core.jso
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
-import mui.icons.material.CheckBox
 import mui.material.*
 import mui.material.styles.Theme
 import mui.material.styles.TypographyVariant
 import mui.material.styles.createTheme
 import mui.material.styles.useTheme
-import mui.system.ThemeOptions
 import mui.system.ThemeProvider
 import mui.system.sx
 import react.*
-import react.dom.html.ReactHTML.div
-import react.dom.events.KeyboardEventHandler
 import react.dom.html.ButtonType
 import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.form
 import react.dom.html.ReactHTML.h1
-import react.dom.html.ReactHTML.h2
 import react.dom.html.ReactHTML.main
-import react.dom.img
 import react.dom.onChange
 import react.router.Navigate
 import react.router.useNavigate
@@ -32,6 +27,10 @@ import web.html.HTMLInputElement
 import web.html.InputType
 
 external interface LoginCardComponentProps : Props {
+}
+
+private val imageHeader = ReactHTML.img.styled { _, theme ->
+    maxWidth = 90.pct
 }
 
 val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
@@ -42,7 +41,7 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
     val theme = useTheme<Theme>()
     val navigate = useNavigate()
 
-    val logoPath = if (theme.palette.mode == PaletteMode.dark) "/logo-dark.png" else "logo.png"
+    val logoPath = if (theme.palette.mode == PaletteMode.dark) "/logo-dark.png" else "/logo.png"
 
 
     useEffectOnce {
@@ -81,8 +80,10 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
             attrs.sx {
                 marginTop = 100.px
                 marginBottom = 50.px
+                maxWidth = 90.pct
             }
-            img {
+
+            imageHeader {
                 attrs.src = ApiClient.getLocalLink(logoPath)
             }
         }
@@ -215,7 +216,7 @@ val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
                 }
                 onClick = {
                     it.preventDefault()
-                    navigate.replace("/contact")
+                    navigate("/contact")
                 }
             }
             +"Contact"

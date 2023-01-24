@@ -1,8 +1,11 @@
 package com.perpheads.files.components
 
+import com.perpheads.files.ApiClient
+import com.perpheads.files.logout
 import csstype.*
 import js.core.jso
 import kotlinx.browser.window
+import kotlinx.coroutines.launch
 import mui.icons.material.MoreVert
 import mui.icons.material.Search
 import mui.material.*
@@ -14,6 +17,7 @@ import mui.system.ThemeProvider
 import mui.system.sx
 import react.*
 import react.dom.html.ReactHTML
+import react.router.useNavigate
 import web.html.HTMLButtonElement
 import web.html.HTMLInputElement
 
@@ -23,7 +27,12 @@ external interface PageProps : PropsWithChildren {
     var onSearchChanged: ((String) -> Unit)?
 }
 
-private val SidebarMenu = fc<Props> {
+external interface SidebarMenuProps: Props {
+    var onDialogSelected: (PageDialogs) -> Unit
+    var onLogout: () -> Unit
+}
+
+private val SidebarMenu = fc<SidebarMenuProps> { props ->
     var anchorEl by useState<HTMLButtonElement?>(null)
 
     Fragment {
@@ -34,9 +43,6 @@ private val SidebarMenu = fc<Props> {
                 color = IconButtonColor.inherit
                 onClick = {
                     anchorEl = it.currentTarget
-                }
-                sx {
-                    marginRight = 10.px
                 }
             }
 
@@ -62,11 +68,38 @@ private val SidebarMenu = fc<Props> {
                     +"Files"
                 }
             }
+
+            MenuItem {
+                attrs.onClick = {
+                    anchorEl = null
+                    props.onDialogSelected(PageDialogs.API_KEY_DIALOG)
+                }
+                attrs.key = "Get API Key"
+                Typography {
+                    +"Get API Key"
+                }
+            }
+
+            MenuItem {
+                attrs.onClick = {
+                    anchorEl = null
+                    props.onLogout()
+                }
+                attrs.key = "Logout"
+                Typography {
+                    +"Logout"
+                }
+            }
         }
     }
 }
 
+enum class PageDialogs {
+    API_KEY_DIALOG
+}
+
 val Page = fc<PageProps> { props ->
+    val navigate = useNavigate()
     val paletteMode = if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
         PaletteMode.dark
     } else {
@@ -79,8 +112,24 @@ val Page = fc<PageProps> { props ->
         }
     })
 
+    fun doLogout() {
+        ApiClient.mainScope.launch {
+            try {
+                ApiClient.logout()
+            } catch (_: Exception) {
+
+            }
+            logout(navigate)
+        }
+    }
+
+
+    var currentDialog by useState<PageDialogs?>(null)
+
     ThemeProvider {
         attrs.theme = theme
+
+        val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
 
         Box {
             CssBaseline { }
@@ -137,7 +186,15 @@ val Page = fc<PageProps> { props ->
                         props.onSearchChanged?.let { onSearch ->
                         }
 
-                        SidebarMenu { }
+                        SidebarMenu {
+                            attrs.onDialogSelected = {
+                                currentDialog = it
+                            }
+
+                            attrs.onLogout = {
+                                doLogout()
+                            }
+                        }
                     }
                 }
             }
@@ -157,6 +214,21 @@ val Page = fc<PageProps> { props ->
                     }
                     attrs.square = true
                     props.children()
+                }
+            }
+
+            Dialog {
+                attrs.open = currentDialog != null
+                attrs.onClose = { _, _ ->
+                    currentDialog = null
+                }
+
+                if (!smallScreen) {
+                    attrs.maxWidth = 800.px
+                }
+
+                if (currentDialog == PageDialogs.API_KEY_DIALOG) {
+                    ApiKeyComponent { }
                 }
             }
         }

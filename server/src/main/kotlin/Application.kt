@@ -27,9 +27,10 @@ import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.partialcontent.PartialContent
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
 import io.ktor.server.websocket.*
+import io.ktor.util.date.*
 import org.flywaydb.core.Flyway
-import org.koin.core.context.startKoin
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.slf4j.LoggerFactory
@@ -40,6 +41,14 @@ import java.time.Duration
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
 
+
+fun ApplicationCall.getCookieDomain(config: PhFilesConfig): String {
+    return if (config.development) {
+        request.host()
+    } else{
+        config.cookie.domain
+    }
+}
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
@@ -139,10 +148,15 @@ fun Application.module(testing: Boolean = false) {
         exception { call: ApplicationCall, cause: Exception ->
             when (cause) {
                 is UnauthorizedException -> {
-                    call.response.cookies.appendExpired(
+                    call.response.cookies.append(
                         name = "id",
-                        path = "/",
-                        domain = phConfig.cookie.domain
+                        value = "",
+                        expires = GMTDate.START,
+                        domain = call.getCookieDomain(phConfig),
+                        secure = phConfig.cookie.secure,
+                        httpOnly = true,
+                        extensions = mapOf("SameSite" to "Strict"),
+                        path = "/"
                     )
                     call.respond(message = cause.content ?: "", status = HttpStatusCode.Unauthorized)
                 }
@@ -161,7 +175,7 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
-        accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao, phConfig.contact)
+        accountRoutes(userDao, cookieDao, phConfig, fileDao)
         fileRoutes(fileDao, phConfig)
         shareRoutes()
         static("/") {
@@ -170,6 +184,7 @@ fun Application.module(testing: Boolean = false) {
             resource("favicon.png")
             resource("index.html")
             resource("logo.png")
+            resource("logo-dark.png")
             resource("thumbnail.png")
             resource("client.js")
             resource("client.js.map")

@@ -19,6 +19,7 @@ external interface FileComponentProps : Props {
     var file: FileResponse
     var deleteFile: (FileResponse) -> Unit
     var renameFile: (FileResponse, String) -> Unit
+    var showDetails: Boolean
 }
 
 val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
@@ -94,11 +95,13 @@ val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
                 }
             }
         }
-        TableCell {
-            +props.file.formattedUploadDate
-        }
-        TableCell {
-            +props.file.humanReadableByteSize()
+        if (props.showDetails) {
+            TableCell {
+                +props.file.formattedUploadDate
+            }
+            TableCell {
+                +props.file.humanReadableByteSize()
+            }
         }
         TableCell {
             Box {

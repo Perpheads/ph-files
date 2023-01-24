@@ -10,7 +10,9 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import web.file.File
 import web.http.FormData
+import web.location.location
 import web.prompts.alert
+import web.window.window
 import web.xhr.XMLHttpRequest
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -23,7 +25,9 @@ object ApiClient {
         return js("DEVELOPMENT_MODE") == true
     }
 
-    val host: String = if (isDevelopment()) "http://localhost:8080" else ""
+    private val host: String = if (isDevelopment()) {
+        location.protocol + "//" + location.hostname + ":8080"
+    } else ""
 
 
     fun getLocalLink(path: String): String {
@@ -124,6 +128,7 @@ object ApiClient {
             xmlRequest.onerror = {
                 continuation.resumeWithException(RuntimeException("Unknown error while fetching data"))
             }
+            xmlRequest.withCredentials = true
             xmlRequest.onreadystatechange = {
                 if (xmlRequest.readyState == 4.toShort()) {
                     when (xmlRequest.status) {
@@ -142,7 +147,7 @@ object ApiClient {
                     xmlRequest.response
                 }
             }
-            xmlRequest.open("POST", "/upload-cookie")
+            xmlRequest.open("POST", "$host/upload-cookie")
             xmlRequest.send(formData)
         }
     }
