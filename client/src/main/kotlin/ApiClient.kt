@@ -10,28 +10,27 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import web.file.File
 import web.http.FormData
-import web.location.location
-import web.prompts.alert
-import web.window.window
 import web.xhr.XMLHttpRequest
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 object ApiClient {
-    val mainScope = MainScope()
-
-    fun isDevelopment(): Boolean {
+    private fun isDevelopment(): Boolean {
         return js("DEVELOPMENT_MODE") == true
     }
 
-    private val host: String = if (isDevelopment()) {
-        location.protocol + "//" + location.hostname + ":8080"
+    val host: String = if (isDevelopment()) {
+        web.location.location.hostname + ":8080"
+    } else web.location.location.host
+
+    private val location: String = if (isDevelopment()) {
+        web.location.location.protocol + "//" + web.location.location.hostname + ":8080"
     } else ""
 
 
     fun getLocalLink(path: String): String {
-        return host + path
+        return location + path
     }
 
     object UnauthorizedException : Exception()
@@ -51,7 +50,7 @@ object ApiClient {
             page = page,
             entriesPerPage = entriesPerPage
         )
-        val result = axiosPost<FileListResponse, SearchRequest>("$host/account", request) {
+        val result = axiosPost<FileListResponse, SearchRequest>("$location/account", request) {
             parameter("include_thumbnails", "false")
         }
         return result
@@ -67,33 +66,33 @@ object ApiClient {
     }
 
     suspend fun deleteFile(link: String) {
-        return axiosDelete("$host/${link}")
+        return axiosDelete("$location/${link}")
     }
 
     suspend fun renameFile(link: String, newName: String) {
         val body = RenameFileRequest(newName)
-        return axiosPost("$host/${link}", body)
+        return axiosPost("$location/${link}", body)
     }
 
     suspend fun getAccountInfo(): AccountInfoV2 {
-        return axiosGet("$host/account-info")
+        return axiosGet("$location/account-info")
     }
 
     suspend fun getApiKey(): ApiKeyResponse {
-        return axiosGet("$host/api-key")
+        return axiosGet("$location/api-key")
     }
 
     suspend fun generateApiKey(): ApiKeyResponse {
-        return axiosPost("$host/generate-api-key")
+        return axiosPost("$location/generate-api-key")
     }
 
     suspend fun getStatistics(): StatisticsResponse {
-        return axiosGet("$host/statistics")
+        return axiosGet("$location/statistics")
     }
 
     suspend fun authenticate(username: String, password: String, remember: Boolean): LoginResponseV2 {
         val body = LoginRequest(username, password, remember)
-        return axiosPost("$host/v2/auth", body)
+        return axiosPost("$location/v2/auth", body)
     }
 
     suspend fun createUser(username: String, email: String, password: String) {
@@ -102,18 +101,18 @@ object ApiClient {
             email = email,
             password = password
         )
-        return axiosPost("$host/users", body)
+        return axiosPost("$location/users", body)
     }
 
     suspend fun getContact(): ContactResponse {
-        return axiosGet("$host/contact")
+        return axiosGet("$location/contact")
     }
 
-    suspend fun logout() = axiosPost<Unit>("$host/logout")
+    suspend fun logout() = axiosPost<Unit>("$location/logout")
 
     suspend fun changePassword(existingPassword: String, newPassword: String) {
         val body = ChangePasswordRequest(existingPassword, newPassword)
-        return axiosPost("$host/change-password", body)
+        return axiosPost("$location/change-password", body)
     }
 
     suspend fun uploadFile(file: File, onProgress: (Double) -> Unit): FileResponse {
@@ -147,14 +146,14 @@ object ApiClient {
                     xmlRequest.response
                 }
             }
-            xmlRequest.open("POST", "$host/upload-cookie")
+            xmlRequest.open("POST", "$location/upload-cookie")
             xmlRequest.send(formData)
         }
     }
 
     suspend fun getSharedFileInformation(link: String): ShareFileResponse? {
         return try {
-            axiosGet("$host/share/${link}")
+            axiosGet("$location/share/${link}")
         } catch (e: NotFoundException) {
             null
         }

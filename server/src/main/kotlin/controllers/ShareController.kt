@@ -93,8 +93,6 @@ fun Route.shareRoutes() {
         }
     }
 
-    val validFileNameRegex = Regex("^[\\w\\-. ]+$")
-
     requireUser(AuthorizationType.COOKIE) {
         webSocket("/share/ws") {
             val userId = call.user().userId
@@ -110,7 +108,7 @@ fun Route.shareRoutes() {
                 return@webSocket
             }
             val announceMessage = Json.decodeFromString<AnnounceMessage>(announceFrame.data.decodeToString())
-            if (!validFileNameRegex.matches(announceMessage.fileName) || announceMessage.fileName.length !in 2..50) {
+            if (!validateFilename(announceMessage.fileName) || announceMessage.fileName.length !in 2..50) {
                 logger.warn("User $userId attempted share session with invalid filename: ${announceMessage.fileName}")
                 val errorMessage =
                     Json.encodeToString<ShareWebSocketMessage>(ErrorMessage("Invalid filename"))

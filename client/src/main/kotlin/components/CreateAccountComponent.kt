@@ -2,36 +2,30 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.replace
-import com.perpheads.files.showToast
 import com.perpheads.files.useAccount
-import kotlinx.browser.window
-import kotlinx.coroutines.MainScope
+import com.perpheads.files.useScope
+import csstype.px
 import kotlinx.coroutines.launch
-import kotlinx.css.input
-import kotlinx.css.margin
-import kotlinx.css.px
-import kotlinx.html.ButtonType
-import kotlinx.html.InputType
-import kotlinx.html.classes
-import kotlinx.html.id
-import kotlinx.html.js.onChangeFunction
-import org.w3c.dom.HTMLInputElement
-import react.Props
-import react.dom.*
-import react.fc
+import mui.material.*
+import mui.system.sx
+import react.*
+import react.dom.html.ReactHTML
+import react.dom.onChange
 import react.router.useNavigate
-import react.useEffect
-import react.useState
-import styled.css
-import styled.styledDiv
 
-val CreateAccountComponent = fc<Props>("CreateAccountComponent") {
+external interface CreateAccountProps : Props {
+    var showAlert: (String, AlertColor) -> Unit
+    var onDialogClosed: () -> Unit
+}
+
+val CreateAccountComponent = fc<CreateAccountProps>("CreateAccountComponent") {props ->
     val (user, _) = useAccount()
     val navigate = useNavigate()
     var username by useState("")
     var email by useState("")
     var password by useState("")
     var buttonEnabled by useState(true)
+    val scope = useScope()
 
     useEffect(user) {
         if (user != null && !user.admin) {
@@ -40,91 +34,86 @@ val CreateAccountComponent = fc<Props>("CreateAccountComponent") {
     }
 
 
-    div {
-        navBar {
-            message = "Create a new Account"
-            showSearchBar = false
-            onSearchChanged = {}
-        }
-
-        if (user == null) return@div
-        div("container") {
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
+    DialogTitle {
+        +"Create New Account"
+    }
+    Divider { }
+    DialogContent {
+        Box {
+            attrs.component = ReactHTML.form
+            attrs.sx {
+                marginTop = 2.px
+            }
+            attrs.onSubmit = {
+                it.preventDefault()
+                buttonEnabled = false
+                scope.launch {
+                    try {
+                        ApiClient.createUser(username, email, password)
+                        username = ""
+                        email = ""
+                        password = ""
+                        props.showAlert("New account created successfully", AlertColor.success)
+                        props.onDialogClosed()
+                    } catch (e: Exception) {
+                        props.showAlert("Failed creating new account", AlertColor.error)
+                    }
+                    buttonEnabled = true
                 }
+            }
 
-                div("row") {
-                    form(classes = "col s12") {
-                        attrs.onSubmit = {
-                            buttonEnabled = false
-                            MainScope().launch {
-                                try {
-                                    ApiClient.createUser(username, email, password)
-                                    showToast("New account created successfully")
-                                    username = ""
-                                    email = ""
-                                    password = ""
-                                } catch (e: Exception) {
-                                    showToast("Failed creating new account")
-                                }
-                                buttonEnabled = true
-                            }
-                        }
-
-                        div("row") {
-                            div("input-field col s12") {
-                                input(type = InputType.text, classes = "validate") {
-                                    attrs.id = "username"
-                                    attrs.value = username
-                                    attrs.onChangeFunction = { username = (it.target as HTMLInputElement).value }
-                                    attrs.minLength = "3"
-                                    attrs.maxLength = "50"
-                                }
-                                label {
-                                    attrs.htmlFor = "username"
-                                    +"Username"
-                                }
-                            }
-                        }
-                        div("row") {
-                            div("input-field col s12") {
-                                input(type = InputType.email, classes = "validate") {
-                                    attrs.id = "email"
-                                    attrs.value = email
-                                    attrs.onChangeFunction = { email = (it.target as HTMLInputElement).value }
-                                    attrs.minLength = "3"
-                                    attrs.maxLength = "100"
-                                }
-                                label {
-                                    attrs.htmlFor = "email"
-                                    +"Email"
-                                }
-                            }
-                        }
-                        div("row") {
-                            div("input-field col s12") {
-                                input(type = InputType.password, classes = "validate") {
-                                    attrs.id = "password"
-                                    attrs.value = password
-                                    attrs.onChangeFunction = { password = (it.target as HTMLInputElement).value }
-                                    attrs.minLength = "8"
-                                    attrs.maxLength = "50"
-                                }
-                                label {
-                                    attrs.htmlFor = "password"
-                                    +"Password"
-                                }
-                            }
-                        }
-                        div("row center") {
-                            button(classes = "waves-effect waves-light btn", type = ButtonType.submit) {
-                                attrs.disabled = !buttonEnabled
-                                +"Create Account"
-                            }
-                        }
+            TextField {
+                attrs {
+                    margin = FormControlMargin.normal
+                    required = true
+                    fullWidth = true
+                    name = "username"
+                    label = ReactNode("Username")
+                    onChange = {
+                        username = (it.target as web.html.HTMLInputElement).value
                     }
                 }
+            }
+
+            TextField {
+                attrs {
+                    margin = FormControlMargin.normal
+                    required = true
+                    fullWidth = true
+                    name = "email"
+                    type = web.html.InputType.email
+                    label = ReactNode("Email")
+                    onChange = {
+                        email = (it.target as web.html.HTMLInputElement).value
+                    }
+                }
+            }
+
+            TextField {
+                attrs {
+                    margin = FormControlMargin.normal
+                    required = true
+                    fullWidth = true
+                    type = web.html.InputType.password
+                    name = "password"
+                    label = ReactNode("Password")
+                    onChange = {
+                        password = (it.target as web.html.HTMLInputElement).value
+                    }
+                }
+            }
+
+            Button {
+                attrs {
+                    type = react.dom.html.ButtonType.submit
+                    fullWidth = true
+                    variant = ButtonVariant.contained
+                    sx {
+                        marginTop = 12.px
+                        marginBottom = 2.px
+                    }
+                }
+                +"Create Account"
             }
         }
     }

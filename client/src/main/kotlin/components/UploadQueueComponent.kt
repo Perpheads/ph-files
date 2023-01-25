@@ -1,15 +1,14 @@
 package com.perpheads.files.components
 
-import csstype.*
+import csstype.Position
+import csstype.pct
+import csstype.px
 import mui.material.*
 import mui.material.styles.Theme
 import mui.material.styles.useTheme
 import mui.system.Breakpoint
 import mui.system.sx
 import react.*
-import react.dom.*
-import styled.css
-import styled.styledDiv
 
 
 data class UploadQueueEntry(

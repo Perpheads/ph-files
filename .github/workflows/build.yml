@@ -32,6 +32,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Build Client with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ':client:browserProductionWebpack'
+      - name: Copy client files
+        run: cp client/build/distributions/* server/src/main/resources/
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:

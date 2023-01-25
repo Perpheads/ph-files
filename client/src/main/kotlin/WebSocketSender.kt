@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 import web.file.File
 import websockets.WebSocket
 
-class WebSocketSender(private val path: String, private val file: File) {
+class WebSocketSender(private val path: String, private val file: File, private val scope: CoroutineScope) {
     private lateinit var socket: WebSocket
     private var sendJob: Job? = null
     private var tokenChannel = Channel<Unit>(Channel.UNLIMITED)
@@ -31,7 +31,7 @@ class WebSocketSender(private val path: String, private val file: File) {
 
     private fun startSending() {
         onProgress(0)
-        sendJob = MainScope().launch {
+        sendJob = scope.launch {
             var sent = 0.0
             while (sent < file.size.toDouble()) {
                 tokenChannel.receive()
@@ -47,9 +47,8 @@ class WebSocketSender(private val path: String, private val file: File) {
     }
 
     private fun getWebSocketURL(path: String): String {
-        val location = window.location
         val protocol = if (window.location.protocol == "http:") "ws" else "wss"
-        return "${protocol}://${location.host}$path"
+        return "${protocol}://${ApiClient.host}$path"
     }
 
     fun open() {

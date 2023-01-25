@@ -2,17 +2,15 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.replace
+import com.perpheads.files.useScope
 import com.perpheads.files.wrappers.styled
 import csstype.*
-import js.core.jso
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.material.styles.Theme
 import mui.material.styles.TypographyVariant
-import mui.material.styles.createTheme
 import mui.material.styles.useTheme
-import mui.system.ThemeProvider
 import mui.system.sx
 import react.*
 import react.dom.html.ButtonType
@@ -40,12 +38,13 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
     var remember by useState(false)
     val theme = useTheme<Theme>()
     val navigate = useNavigate()
+    val scope = useScope()
 
     val logoPath = if (theme.palette.mode == PaletteMode.dark) "/logo-dark.png" else "/logo.png"
 
 
     useEffectOnce {
-        ApiClient.mainScope.launch {
+        scope.launch {
             if (ApiClient.getLoggedIn()) {
                 window.localStorage.setItem("loggedIn", "yes")
                 navigate.replace("/account")
@@ -55,7 +54,7 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
 
     fun login() {
         error = null
-        ApiClient.mainScope.launch {
+        scope.launch {
             try {
                 val response = ApiClient.authenticate(username, password, remember)
                 error = response.error
@@ -177,49 +176,34 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
 val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
     val navigate = useNavigate()
 
-    val paletteMode = if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        PaletteMode.dark
-    }  else {
-        PaletteMode.light
-    }
-
-    val theme = createTheme(jso {
-        palette = jso {
-            mode = paletteMode
-        }
-    })
-
     if (window.localStorage.getItem("loggedIn") == "yes") {
         Navigate {
             attrs.to = "/account"
         }
     }
-    ThemeProvider {
-        attrs.theme = theme
-        Container {
-            attrs.component = main
-            attrs.maxWidth = "sm"
+    Container {
+        attrs.component = main
+        attrs.maxWidth = "sm"
 
-            CssBaseline { }
+        CssBaseline { }
 
-            LoginCardComponent { }
-        }
-        Link {
-            attrs {
-                variant = ReactHTML.h5
-                underline = LinkUnderline.none
-                href = "#"
-                sx {
-                    position = Position.absolute
-                    right = 15.px
-                    bottom = 15.px
-                }
-                onClick = {
-                    it.preventDefault()
-                    navigate("/contact")
-                }
+        LoginCardComponent { }
+    }
+    Link {
+        attrs {
+            variant = ReactHTML.h5
+            underline = LinkUnderline.none
+            href = "#"
+            sx {
+                position = Position.absolute
+                right = 15.px
+                bottom = 15.px
             }
-            +"Contact"
+            onClick = {
+                it.preventDefault()
+                navigate("/contact")
+            }
         }
+        +"Contact"
     }
 }

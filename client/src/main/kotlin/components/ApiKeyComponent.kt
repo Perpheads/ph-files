@@ -2,10 +2,10 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.logoutIfUnauthorized
+import com.perpheads.files.useScope
 import csstype.*
 import js.core.jso
 import kotlinx.browser.window
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mui.icons.material.ContentCopy
 import mui.icons.material.Refresh
@@ -17,18 +17,20 @@ import mui.system.sx
 import react.*
 import react.router.useNavigate
 
-val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
+external interface ApiKeyProps: Props {
+    var showAlert: (String, AlertColor) -> Unit
+}
+
+val ApiKeyComponent = fc<ApiKeyProps>("ApiKeyComponent") { props ->
     var apiKey by useState("Loading")
     val navigate = useNavigate()
 
     val theme = useTheme<Theme>()
     val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
-
-    var alertColor by useState(AlertColor.info)
-    var alertText by useState<String?>(null)
+    val scope = useScope()
 
     useEffectOnce {
-        MainScope().launch {
+        scope.launch {
             logoutIfUnauthorized(navigate) {
                 apiKey = ApiClient.getApiKey().apiKey
             }
@@ -36,11 +38,10 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
     }
 
     fun generateApiKey() {
-        MainScope().launch {
+        scope.launch {
             logoutIfUnauthorized(navigate) {
                 apiKey = ApiClient.generateApiKey().apiKey
-                alertColor = AlertColor.success
-                alertText = "New API key generated successfully"
+                props.showAlert("New API key generated successfully", AlertColor.success)
             }
         }
     }
@@ -63,8 +64,7 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
                 }
             """.trimIndent()
         )
-        alertColor = AlertColor.info
-        alertText = "ShareX template copied to clipboard"
+        props.showAlert("ShareX template copied to clipboard", AlertColor.info)
     }
 
     DialogTitle {
@@ -81,8 +81,7 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
                 label = ReactNode("API Key")
                 onFocus = {
                     window.navigator.clipboard.writeText(apiKey)
-                    alertColor = AlertColor.info
-                    alertText = "API Key copied successfully"
+                    props.showAlert("API Key copied successfully", AlertColor.info)
                 }
 
                 value = apiKey
@@ -128,28 +127,6 @@ val ApiKeyComponent = fc<Props>("ApiKeyComponent") {
                 attrs.onClick = { copyShareXConfig() }
 
                 +"Copy ShareX Config"
-            }
-        }
-    }
-
-    Snackbar {
-        attrs {
-            open = alertText != null
-            autoHideDuration = 6000
-            onClose = { _, _ ->
-                alertText = null
-            }
-        }
-        alertText?.let { text ->
-            Alert {
-                attrs.onClose = {
-                    alertText = null
-                }
-                attrs.sx {
-                    width = 100.pct
-                }
-                attrs.severity = alertColor
-                +text
             }
         }
     }

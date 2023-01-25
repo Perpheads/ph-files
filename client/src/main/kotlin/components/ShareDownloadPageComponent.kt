@@ -2,18 +2,20 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.data.ShareFileResponse
+import com.perpheads.files.useScope
+import csstype.px
 import js.core.get
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.css.*
+import mui.icons.material.Download
+import mui.material.Button
+import mui.material.ButtonColor
+import mui.material.ButtonVariant
+import mui.material.Typography
+import mui.material.styles.TypographyVariant
+import mui.system.sx
 import react.*
-import react.dom.div
-import react.dom.onClick
-import react.dom.p
 import react.router.useParams
-import styled.css
-import styled.styledA
-import styled.styledDiv
 
 
 val ShareDownloadComponent = fc<Props>("ShareDownloadComponent") {
@@ -22,55 +24,45 @@ val ShareDownloadComponent = fc<Props>("ShareDownloadComponent") {
 
     var fileResponse by useState<ShareFileResponse>()
     var downloading by useState(false)
+    var currentJob by useState<Job?>(null)
+    val scope = useScope()
 
     useEffect(param) {
-        MainScope().launch {
+        currentJob?.cancel()
+        currentJob = scope.launch {
             downloading = false
             fileResponse = ApiClient.getSharedFileInformation(token)
         }
     }
 
-    div {
-        navBar {
-            message = "Download File"
-            showSearchBar = false
-            requireUser = false
-            onSearchChanged = {}
-        }
-        div("container") {
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
-                    paddingBottom = 18.px
-                    height = 100.pct
-                    paddingTop = 10.px
-                    paddingRight = 10.px
-                    paddingLeft = 10.px
-                }
-                div("col l4 center-align") {
-                    fileResponse?.let { file ->
-                        p {
-                            +"Downloading file:"
-                        }
-                        SharePreviewComponent {
-                            attrs.file = file
-                        }
-                        styledA {
-                            css {
-                                classes += "btn waves-effect waves-light"
-                                if (downloading) {
-                                    classes += "disabled"
-                                }
-                            }
-                            attrs.href = "/share/$token/download"
-                            attrs.onClick = {
-                                downloading = true
-                            }
+    Page {
+        attrs.name = "Download File"
+        attrs.searchBarEnabled = false
 
-                            +"Download"
-                        }
-                    }
+        fileResponse?.let { file ->
+            Typography {
+                attrs.variant = TypographyVariant.h5
+                attrs.gutterBottom = true
+                +"Downloading file:"
+            }
+
+            SharePreviewComponent {
+                attrs.file = file
+            }
+
+            Button {
+                attrs.href = ApiClient.getLocalLink("/share/$token/download")
+                attrs.sx {
+                    marginTop = 16.px
                 }
+                attrs.color = ButtonColor.secondary
+                attrs.disabled = downloading
+                attrs.variant = ButtonVariant.contained
+                attrs.endIcon = Download.create()
+                attrs.onClick = {
+                    downloading = true
+                }
+                +"Download"
             }
         }
     }

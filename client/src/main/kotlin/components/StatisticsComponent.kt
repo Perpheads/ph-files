@@ -4,82 +4,108 @@ import com.perpheads.files.ApiClient
 import com.perpheads.files.data.StatisticsResponse
 import com.perpheads.files.data.humanReadableByteSize
 import com.perpheads.files.logoutIfUnauthorized
+import com.perpheads.files.useScope
+import csstype.Display
+import csstype.FlexDirection
+import csstype.pct
+import csstype.px
 import kotlinx.coroutines.launch
-import kotlinx.css.*
+import mui.material.*
+import mui.material.styles.TypographyVariant
+import mui.system.sx
 import react.Props
-import react.dom.*
 import react.fc
 import react.router.useNavigate
 import react.useEffectOnce
 import react.useState
-import styled.css
-import styled.styledDiv
 
-val StatisticsComponent = fc<Props> {
+val StatisticsPage = fc<Props> {
     val navigate = useNavigate()
     val (statistics, setStatistics) = useState<StatisticsResponse?>(null)
+    val scope = useScope()
 
     useEffectOnce {
-        ApiClient.mainScope.launch {
+        scope.launch {
             logoutIfUnauthorized(navigate) {
                 setStatistics(ApiClient.getStatistics())
             }
         }
     }
 
-    div {
-        navBar {
-            message = "File Statistics"
-            showSearchBar = false
-        }
-        div("container") {
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
-                    padding(10.px)
-                    paddingBottom = 18.px
-                    height = 100.pct
-                    minHeight = 100.pct
-                }
-                if (statistics == null) return@styledDiv
-                h4 {
-                    +"Statistics"
-                }
-                div("divider") {}
+    Page {
+        attrs.searchBarEnabled = false
+        attrs.name = "File Statistics"
 
-                div("section") {
-                    h5 {
-                        +"Total Statistics"
-                    }
-                    h6 {
-                        +"Total file count: ${statistics.totalStatistics.fileCount}"
-                    }
-                    h6 {
-                        +"Total storage used: ${statistics.totalStatistics.storageUsed.humanReadableByteSize()}"
-                    }
-                }
-                div("divider") {}
+        Box {
+            attrs.sx {
+                display = Display.flex
+                flexDirection = FlexDirection.column
+                width = 100.pct
+            }
 
-                div("section") {
-                    h5 {
-                        +"User Statistics (Top 100)"
-                    }
-                    table {
-                        thead {
-                            tr {
-                                th { +"Name" }
-                                th { +"File Count" }
-                                th { +"Storage Used" }
+
+            Typography {
+                attrs.variant = TypographyVariant.h4
+                attrs.gutterBottom = true
+                +"Statistics"
+            }
+
+            Divider {
+                attrs.sx {
+                    marginTop = 16.px
+                    marginBottom = 16.px
+                }
+            }
+
+            if (statistics == null) return@Box
+
+            Typography {
+                attrs.variant = TypographyVariant.h5
+                attrs.gutterBottom = true
+                +"Overall Statistics"
+            }
+            Typography {
+                attrs.variant = TypographyVariant.body1
+                +"Total file count: ${statistics.totalStatistics.fileCount}"
+            }
+            Typography {
+                attrs.variant = TypographyVariant.body1
+                +"Total storage used: ${statistics.totalStatistics.storageUsed.humanReadableByteSize()}"
+            }
+            Divider {
+                attrs.sx {
+                    marginTop = 16.px
+                    marginBottom = 16.px
+                }
+            }
+
+            Typography {
+                attrs.variant = TypographyVariant.h5
+                attrs.gutterBottom = true
+                +"User Statistics (Top 100)"
+            }
+
+            TableContainer {
+                Table {
+                    TableHead {
+                        TableRow {
+                            TableCell {
+                                +"Name"
+                            }
+                            TableCell {
+                                +"File Count"
+                            }
+                            TableCell {
+                                +"Storage Used"
                             }
                         }
-
-                        tbody {
-                            for (userStatistics in statistics.userStatistics) {
-                                tr {
-                                    td { +userStatistics.name }
-                                    td { +userStatistics.fileCount.toString() }
-                                    td { +userStatistics.storageUsed.humanReadableByteSize() }
-                                }
+                    }
+                    TableBody {
+                        for (userStatistics in statistics.userStatistics) {
+                            TableRow {
+                                TableCell { +userStatistics.name }
+                                TableCell { +userStatistics.fileCount.toString() }
+                                TableCell { +userStatistics.storageUsed.humanReadableByteSize() }
                             }
                         }
                     }

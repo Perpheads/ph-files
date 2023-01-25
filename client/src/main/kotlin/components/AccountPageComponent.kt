@@ -11,7 +11,6 @@ import js.core.asList
 import kotlinx.coroutines.launch
 import kotlinx.css.Display
 import kotlinx.css.display
-import kotlinx.css.small
 import kotlinx.html.InputType
 import kotlinx.html.id
 import mui.icons.material.Add
@@ -56,6 +55,13 @@ private fun RBuilder.tableHeader(text: String, body: (RElementBuilder<TableCellP
 
 }
 
+data class PaginationData(
+    val totalPages: Int,
+    val currentPage: Int,
+    val pageStart: Int,
+    val pageEnd: Int
+)
+
 val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     val (account, _) = useAccount()
 
@@ -73,6 +79,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     var paginationData by useState(PaginationData(1, 1, 1, 1))
     var files by useState<List<FileResponse>>(emptyList())
     var queueFiles by useState(emptyList<UploadQueueEntry>())
+    val scope = useScope()
 
     fun changeUrl(newPage: Int, newSearch: String) {
         val params = Parameters.build {
@@ -87,7 +94,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     fun doUploadFiles(uploadFiles: List<File>) {
         val entries = uploadFiles.map { file ->
             val progressEntry = UploadQueueEntry(file.name, 0.0, uploadId++)
-            ApiClient.mainScope.launch {
+            scope.launch {
                 val response = uploadFile(file) { progress ->
                     progressEntry.progress = progress
                     queueFiles = queueFiles.toList()
@@ -128,7 +135,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     }
 
     useEffect(location) {
-        ApiClient.mainScope.launch {
+        scope.launch {
             loadFiles()
         }
     }
@@ -187,7 +194,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
                             showDetails = shouldShowDetails
 
                             deleteFile = { file ->
-                                ApiClient.mainScope.launch {
+                                scope.launch {
                                     doDelete(file)
                                     val newFiles = files.filter { file.fileId != it.fileId }
                                     files = newFiles
@@ -196,7 +203,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
 
 
                             renameFile = { file, newName ->
-                                ApiClient.mainScope.launch {
+                                scope.launch {
                                     doRename(file, newName)
                                     val newFiles = files.map {
                                         if (file.fileId == it.fileId) it.copy(fileName = newName) else it

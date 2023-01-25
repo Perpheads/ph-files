@@ -2,18 +2,18 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.logout
+import com.perpheads.files.useAccount
+import com.perpheads.files.useScope
 import csstype.*
-import js.core.jso
-import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import mui.icons.material.MoreVert
 import mui.icons.material.Search
 import mui.material.*
 import mui.material.Size
+import mui.material.styles.Theme
 import mui.material.styles.TypographyVariant
-import mui.material.styles.createTheme
+import mui.material.styles.useTheme
 import mui.system.Breakpoint
-import mui.system.ThemeProvider
 import mui.system.sx
 import react.*
 import react.dom.html.ReactHTML
@@ -21,19 +21,36 @@ import react.router.useNavigate
 import web.html.HTMLButtonElement
 import web.html.HTMLInputElement
 
+data class AlertData(val text: String, val color: AlertColor)
+
 external interface PageProps : PropsWithChildren {
     var name: String
     var searchBarEnabled: Boolean
     var onSearchChanged: ((String) -> Unit)?
+
+    var currentAlert: AlertData?
+    var onAlertHidden: (() -> Unit)?
 }
 
-external interface SidebarMenuProps: Props {
+external interface SidebarMenuProps : Props {
     var onDialogSelected: (PageDialogs) -> Unit
     var onLogout: () -> Unit
 }
 
+private fun RBuilder.menuItem(text: String, onClicked: () -> Unit) {
+    MenuItem {
+        attrs.onClick = { onClicked() }
+        attrs.key = text
+        Typography {
+            +text
+        }
+    }
+}
+
 private val SidebarMenu = fc<SidebarMenuProps> { props ->
     var anchorEl by useState<HTMLButtonElement?>(null)
+    val (user, _) = useAccount(false)
+    val navigate = useNavigate()
 
     Fragment {
         IconButton {
@@ -61,33 +78,41 @@ private val SidebarMenu = fc<SidebarMenuProps> { props ->
             }
             attrs.open = anchorEl != null
 
-            MenuItem {
-                attrs.onClick = { anchorEl = null }
-                attrs.key = "Files"
-                Typography {
-                    +"Files"
+            if (user != null) {
+                menuItem("Files") {
+                    anchorEl = null
+                    navigate("/account")
                 }
-            }
 
-            MenuItem {
-                attrs.onClick = {
+                menuItem("Get API Key") {
                     anchorEl = null
                     props.onDialogSelected(PageDialogs.API_KEY_DIALOG)
                 }
-                attrs.key = "Get API Key"
-                Typography {
-                    +"Get API Key"
-                }
-            }
 
-            MenuItem {
-                attrs.onClick = {
+                menuItem("Change Password") {
+                    anchorEl = null
+                    props.onDialogSelected(PageDialogs.CHANGE_PASSWORD_DIALOG)
+                }
+
+                menuItem("File Transfer") {
+                    anchorEl = null
+                    navigate("/share")
+                }
+
+                if (user.admin) {
+                    menuItem("Create Account") {
+                        anchorEl = null
+                        props.onDialogSelected(PageDialogs.CREATE_ACCOUNT_DIALOG)
+                    }
+                    menuItem("Statistics") {
+                        anchorEl = null
+                        navigate("/statistics")
+                    }
+                }
+
+                menuItem("Logout") {
                     anchorEl = null
                     props.onLogout()
-                }
-                attrs.key = "Logout"
-                Typography {
-                    +"Logout"
                 }
             }
         }
@@ -95,25 +120,27 @@ private val SidebarMenu = fc<SidebarMenuProps> { props ->
 }
 
 enum class PageDialogs {
-    API_KEY_DIALOG
+    API_KEY_DIALOG,
+    CHANGE_PASSWORD_DIALOG,
+    CREATE_ACCOUNT_DIALOG
 }
 
 val Page = fc<PageProps> { props ->
     val navigate = useNavigate()
-    val paletteMode = if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        PaletteMode.dark
-    } else {
-        PaletteMode.light
+    val (user, _) = useAccount(false)
+    var currentAlert by useState(props.currentAlert)
+    val theme = useTheme<Theme>()
+    val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
+    var currentDialog by useState<PageDialogs?>(null)
+    val scope = useScope()
+
+    useEffect(props.currentAlert) {
+        currentAlert = props.currentAlert
     }
 
-    val theme = createTheme(jso {
-        palette = jso {
-            mode = paletteMode
-        }
-    })
 
     fun doLogout() {
-        ApiClient.mainScope.launch {
+        scope.launch {
             try {
                 ApiClient.logout()
             } catch (_: Exception) {
@@ -124,68 +151,62 @@ val Page = fc<PageProps> { props ->
     }
 
 
-    var currentDialog by useState<PageDialogs?>(null)
+    Box {
+        CssBaseline { }
+        attrs.sx {
+            display = Display.flex
+            flexDirection = FlexDirection.column
+        }
 
-    ThemeProvider {
-        attrs.theme = theme
+        AppBar {
+            attrs.component = ReactHTML.nav
+            Toolbar {
+                Container {
+                    attrs.maxWidth = "lg"
+                    attrs.sx {
+                        display = Display.flex
+                        alignItems = AlignItems.center
+                        flexDirection = FlexDirection.row
+                    }
 
-        val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
-
-        Box {
-            CssBaseline { }
-            attrs.sx {
-                display = Display.flex
-                flexDirection = FlexDirection.column
-            }
-
-            AppBar {
-                attrs.component = ReactHTML.nav
-                Toolbar {
-                    Container {
-                        attrs.maxWidth = "lg"
+                    Typography {
+                        attrs.variant = TypographyVariant.h5
                         attrs.sx {
-                            display = Display.flex
-                            alignItems = AlignItems.center
-                            flexDirection = FlexDirection.row
+                            marginLeft = 10.px
                         }
-
-                        Typography {
-                            attrs.variant = TypographyVariant.h5
-                            attrs.sx {
-                                marginLeft = 10.px
+                        +props.name
+                    }
+                    Box {
+                        attrs.sx {
+                            flexGrow = number(1.0)
+                            theme.breakpoints.only(Breakpoint.xs).invoke {
+                                display = "none".asDynamic() as? Display
                             }
-                            +props.name
-                        }
-                        Box {
-                            attrs.sx {
-                                flexGrow = number(1.0)
-                                theme.breakpoints.only(Breakpoint.xs).invoke {
-                                    display = "none".asDynamic() as? Display
-                                }
-                                theme.breakpoints.only(Breakpoint.sm).invoke {
-                                    display = Display.flex
-                                }
+                            theme.breakpoints.only(Breakpoint.sm).invoke {
+                                display = Display.flex
                             }
                         }
-                        if (props.searchBarEnabled) {
-                            SearchBar {
-                                SearchIconWrapper {
-                                    Search { }
-                                }
-                                StyledInputBase {
-                                    attrs.placeholder = "Search..."
+                    }
+                    if (props.searchBarEnabled) {
+                        SearchBar {
+                            SearchIconWrapper {
+                                Search { }
+                            }
+                            StyledInputBase {
+                                attrs.placeholder = "Search..."
 
-                                    attrs.onChange = { elem ->
-                                        props.onSearchChanged?.let {
-                                            it.invoke((elem.currentTarget as HTMLInputElement).value)
-                                        }
+                                attrs.onChange = { elem ->
+                                    props.onSearchChanged?.let {
+                                        it.invoke((elem.currentTarget as HTMLInputElement).value)
                                     }
                                 }
                             }
                         }
-                        props.onSearchChanged?.let { onSearch ->
-                        }
+                    }
+                    props.onSearchChanged?.let { onSearch ->
+                    }
 
+                    if (user != null) {
                         SidebarMenu {
                             attrs.onDialogSelected = {
                                 currentDialog = it
@@ -198,40 +219,85 @@ val Page = fc<PageProps> { props ->
                     }
                 }
             }
-            Toolbar { }
+        }
+        Toolbar { }
 
-            Container {
-                attrs.maxWidth = "lg"
-                attrs.sx {
-                    paddingTop = 32.px
-                }
-                Paper {
-                    attrs.sx {
-                        display = Display.flex
-                        flexDirection = FlexDirection.column
-                        alignItems = AlignItems.center
-                        padding = 24.px
-                    }
-                    attrs.square = true
-                    props.children()
-                }
+        Container {
+            attrs.maxWidth = "lg"
+            attrs.sx {
+                paddingTop = 32.px
             }
-
-            Dialog {
-                attrs.open = currentDialog != null
-                attrs.onClose = { _, _ ->
-                    currentDialog = null
+            Paper {
+                attrs.sx {
+                    display = Display.flex
+                    flexDirection = FlexDirection.column
+                    alignItems = AlignItems.center
+                    padding = 24.px
                 }
-
-                if (!smallScreen) {
-                    attrs.maxWidth = 800.px
-                }
-
-                if (currentDialog == PageDialogs.API_KEY_DIALOG) {
-                    ApiKeyComponent { }
-                }
+                attrs.square = true
+                props.children()
             }
         }
 
+        Dialog {
+            attrs.open = currentDialog != null
+            attrs.onClose = { _, _ ->
+                currentDialog = null
+            }
+
+            if (!smallScreen) {
+                attrs.maxWidth = 800.px
+            }
+
+            when (currentDialog) {
+                PageDialogs.API_KEY_DIALOG -> {
+                    ApiKeyComponent {
+                        attrs.key = "api_key"
+                        attrs.showAlert = { message, color ->
+                            currentAlert = AlertData(message, color)
+                        }
+                    }
+                }
+
+                PageDialogs.CHANGE_PASSWORD_DIALOG -> {
+                    ChangePasswordComponent { }
+                }
+
+                PageDialogs.CREATE_ACCOUNT_DIALOG -> {
+                    CreateAccountComponent {
+                        attrs.showAlert = { message, color ->
+                            currentAlert = AlertData(message, color)
+                        }
+                        attrs.onDialogClosed = { currentDialog = null }
+                    }
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    Snackbar {
+        attrs {
+            open = currentAlert != null
+            autoHideDuration = 6000
+            onClose = { _, _ ->
+                props.onAlertHidden?.invoke()
+                currentAlert = null
+            }
+        }
+        currentAlert?.let { alert ->
+            Alert {
+                attrs.onClose = {
+                    props.onAlertHidden?.invoke()
+                    currentAlert = null
+                }
+                attrs.sx {
+                    width = 100.pct
+                }
+                attrs.severity = alert.color
+                +alert.text
+            }
+        }
     }
 }
