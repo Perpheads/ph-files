@@ -40,5 +40,6 @@ data class PhFilesConfig(
     val filesFolder: File,
     val cookie: CookieConfig,
     val cors: CorsConfig,
-    val contact: ContactConfig
+    val contact: ContactConfig,
+    val development: Boolean
 )

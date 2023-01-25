@@ -2,10 +2,14 @@ package com.perpheads.files
 
 import com.perpheads.files.components.*
 import com.perpheads.files.data.AccountInfoV2
-import kotlinx.browser.document
-import kotlinx.browser.window
+import js.core.jso
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.js.jso
+import mui.material.PaletteMode
+import mui.material.styles.ThemeProvider
+import mui.material.styles.createTheme
 import react.*
 import react.dom.client.createRoot
 import react.router.NavigateFunction
@@ -13,13 +17,15 @@ import react.router.Route
 import react.router.Routes
 import react.router.dom.HashRouter
 import react.router.useNavigate
+import web.dom.document
+import web.window.window
 
 fun NavigateFunction.replace(route: String) {
     this(route, jso { replace = true })
 }
 
 fun logout(navigate: NavigateFunction) {
-    window.localStorage.removeItem("loggedIn")
+    kotlinx.browser.window.localStorage.removeItem("loggedIn")
     navigate.replace("/")
 }
 
@@ -46,6 +52,16 @@ class AccountContextData(
 
 val AccountContext = createContext<AccountContextData>()
 
+fun useScope(): CoroutineScope {
+    val scope = MainScope()
+    useEffectOnce {
+        cleanup {
+            scope.cancel()
+        }
+    }
+    return scope
+}
+
 fun useAccount(required: Boolean = true): Pair<AccountInfoV2?, StateSetter<AccountInfoV2?>> {
     val contextData = useContext(AccountContext)
     val navigate = useNavigate()
@@ -53,11 +69,22 @@ fun useAccount(required: Boolean = true): Pair<AccountInfoV2?, StateSetter<Accou
     useEffectOnce {
         if (contextData.account != null || contextData.loadingAccount) return@useEffectOnce
         contextData.loadingAccount = true
-        ApiClient.mainScope.launch {
-            catchUnauthorized(navigate.takeIf { required }) {
-                contextData.setAccount(ApiClient.getAccountInfo())
+        val scope = MainScope()
+
+        scope.launch {
+            try {
+                catchUnauthorized(navigate.takeIf { required }) {
+                    contextData.setAccount(ApiClient.getAccountInfo())
+                    contextData.loadingAccount = false
+                }
+            } finally {
                 contextData.loadingAccount = false
             }
+        }
+
+        cleanup {
+            scope.cancel()
+            contextData.loadingAccount = false
         }
     }
     return contextData.account to contextData.setAccount
@@ -66,9 +93,23 @@ fun useAccount(required: Boolean = true): Pair<AccountInfoV2?, StateSetter<Accou
 val App = VFC {
     val (account, setAccount) = useState<AccountInfoV2?>(null)
 
-    StrictMode {
-        AccountContext.Provider {
-            value = AccountContextData(account, setAccount, false)
+    val paletteMode = if (kotlinx.browser.window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        PaletteMode.dark
+    } else {
+        PaletteMode.light
+    }
+
+    val usedTheme = createTheme(jso {
+        palette = jso {
+            mode = paletteMode
+        }
+    })
+
+    AccountContext.Provider {
+        value = AccountContextData(account, setAccount, false)
+
+        ThemeProvider {
+            theme = usedTheme
             HashRouter {
                 Routes {
                     Route {
@@ -101,7 +142,7 @@ val App = VFC {
                     }
                     Route {
                         path = "/statistics"
-                        element = createElement(StatisticsComponent)
+                        element = createElement(StatisticsPage)
                     }
                     Route {
                         path = "/"

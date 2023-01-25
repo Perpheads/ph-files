@@ -93,6 +93,11 @@ DAOs, you will have to first run the application successfully using gradle.
 
 
 ### Gradle configuration
+
+You need two configurations to run the serer and the client. The client configuration has a continuous build feature that
+can automatically detect changes and rebuilds the project similar to how node works.
+
+#### Server
 In IntelliJ, create a new gradle config with a ``:server:run`` task.
 If you are using gradle on its own, please simply set the following environment variables
 in your operating system's environment before invoking gradle.
@@ -102,10 +107,25 @@ the following environment variables have to be set in the gradle run config:
 
 | Environment Variable | Value     |
 |----------------------|-----------|
+| DEVELOPMENT          | true      |
 | COOKIE_DOMAIN        | localhost |
 | COOKIE_SECURE        | false     |
 | CORS_ANY_HOST        | true      |
 | CORS_HOST            | localhost |
+
+If everything is filled in correctly, the database should automatically be migrated upon running
+the configuration. Jooq should generate all of its files and the server should start
+and respond at the specified port (or 8080 as default).
+
+
+### Client
+In IntelliJ, create a new gradle config with a ``:client:browserDevelopmentRun --continuous`` task.
+Ensure to run set the ```DEVELOPMENT``` environment variable to `true` here as well.
+
+When running the client configuration, chrome will be opened automatically when the
+compilation is finished, redirecting you to the correct host/port. 
+The configuration expects the server to already be running on port `8080` of
+the same hostname, while the development server is hardcoded to run on port `8081`.
 
 
 ### Running the application
@@ -114,10 +134,6 @@ After creating a gradle run configuration and selecting it as
 the active configuration, simply hit the play button.
 If you are using gradle on its own, simply run gradle run as discussed above.
 
-
-If everything goes alright, the database should now automatically
-be migrated, Jooq should generate all of its files and the application should start
-and respond at the specified port (or 8080 as default).
 
 
 ### Creating an initial admin user

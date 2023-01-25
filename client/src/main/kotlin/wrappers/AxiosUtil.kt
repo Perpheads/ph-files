@@ -1,8 +1,8 @@
 package com.perpheads.files.wrappers
 
 import com.perpheads.files.ApiClient
+import js.core.jso
 import kotlinx.coroutines.await
-import kotlinx.js.jso
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -48,6 +48,7 @@ class AxiosConfigScope(private val config: AxiosRequestConfig) {
 
 inline fun <reified U> setupAxiosConfig(configure: (AxiosConfigScope).() -> Unit): AxiosRequestConfig {
     val config = generateConfig<U>()
+    config.withCredentials = true
     val configScope = AxiosConfigScope(config)
     configScope.configure()
     configScope.apply()

@@ -2,32 +2,49 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.replace
+import com.perpheads.files.useScope
+import com.perpheads.files.wrappers.styled
+import csstype.*
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
-import kotlinx.css.*
-import kotlinx.html.InputType
-import kotlinx.html.js.onChangeFunction
-import org.w3c.dom.HTMLInputElement
+import mui.material.*
+import mui.material.styles.Theme
+import mui.material.styles.TypographyVariant
+import mui.material.styles.useTheme
+import mui.system.sx
 import react.*
-import react.dom.*
-import react.dom.events.KeyboardEventHandler
+import react.dom.html.ButtonType
+import react.dom.html.ReactHTML
+import react.dom.html.ReactHTML.form
+import react.dom.html.ReactHTML.h1
+import react.dom.html.ReactHTML.main
+import react.dom.onChange
 import react.router.Navigate
-import react.router.dom.Link
 import react.router.useNavigate
-import styled.*
+import web.html.HTMLInputElement
+import web.html.InputType
 
 external interface LoginCardComponentProps : Props {
-    var setError: StateSetter<String?>
 }
 
-val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { props ->
-    val (username, setUsername) = useState("")
-    val (password, setPassword) = useState("")
-    val (remember, setRemember) = useState(false)
+private val imageHeader = ReactHTML.img.styled { _, theme ->
+    maxWidth = 90.pct
+}
+
+val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") {
+    var error by useState<String?>(null)
+    var username by useState("")
+    var password by useState("")
+    var remember by useState(false)
+    val theme = useTheme<Theme>()
     val navigate = useNavigate()
+    val scope = useScope()
+
+    val logoPath = if (theme.palette.mode == PaletteMode.dark) "/logo-dark.png" else "/logo.png"
+
 
     useEffectOnce {
-        ApiClient.mainScope.launch {
+        scope.launch {
             if (ApiClient.getLoggedIn()) {
                 window.localStorage.setItem("loggedIn", "yes")
                 navigate.replace("/account")
@@ -36,69 +53,119 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { pro
     }
 
     fun login() {
-        props.setError(null)
-        ApiClient.mainScope.launch {
+        error = null
+        scope.launch {
             try {
                 val response = ApiClient.authenticate(username, password, remember)
-                props.setError(response.error)
+                error = response.error
                 if (response.error == null) {
                     window.localStorage.setItem("loggedIn", "yes")
                     navigate.replace("/account")
                 }
             } catch (e: Exception) {
-                props.setError("An unknown error occurred")
+                error = "An unknown error occurred"
             }
         }
     }
 
-    val onEnterPressed: KeyboardEventHandler<*> = { event ->
-        if (event.key == "Enter") {
-            login()
+    Box {
+        attrs.sx {
+            display = Display.flex
+            flexDirection = FlexDirection.column
+            alignItems = AlignItems.center
         }
-    }
 
-    div("valign-wrapper row log-in") {
-        div("col card hoverable s10 pull-s1 m6 pull-m3 l4 pull-l4 shake animated") {
-            div("card-content") {
-                span("card-title") {
-                    +"Enter your details"
-                }
-                div("row") {
-                    div("input-field col s11") {
-                        input(type = InputType.text) {
-                            attrs.placeholder = "Username"
-                            attrs.onChangeFunction = { event ->
-                                setUsername((event.target as HTMLInputElement).value)
-                            }
-                            attrs.onKeyPress = onEnterPressed
-                        }
-                    }
-                    div("input-field col s11") {
-                        input(type = InputType.password, classes = "validate") {
-                            attrs.placeholder = "Password"
-                            attrs.onChangeFunction = { event ->
-                                setPassword((event.target as HTMLInputElement).value)
-                            }
-                            attrs.onKeyPress = onEnterPressed
-                        }
-                    }
-                    div("center-align") {
-                        label {
-                            styledInput(type = InputType.checkBox) {
-                                attrs.onChangeFunction = { event ->
-                                    setRemember((event.target as HTMLInputElement).checked)
-                                }
-                            }
-                            span { +"Remember Me" }
-                        }
-                    }
+        Box {
+            attrs.sx {
+                marginTop = 100.px
+                marginBottom = 50.px
+                maxWidth = 90.pct
+            }
+
+            imageHeader {
+                attrs.src = ApiClient.getLocalLink(logoPath)
+            }
+        }
+
+        Paper {
+            attrs {
+                sx {
+                    padding = 24.px
+                    display = Display.flex
+                    alignItems = AlignItems.center
+                    flexDirection = FlexDirection.column
                 }
             }
 
-            div("card-action right-align") {
-                button(classes = "btn waves-effect waves-light") {
-                    +"Login"
-                    attrs.onClick = { login() }
+            Typography {
+                attrs.component = h1
+                attrs.variant = TypographyVariant.h4
+                +"Enter your details"
+            }
+
+            Box {
+                attrs.component = form
+                attrs.sx {
+                    marginTop = 2.px
+                }
+                attrs.onSubmit = {
+                    it.preventDefault()
+                    login()
+                }
+
+                TextField {
+                    attrs {
+                        margin = FormControlMargin.normal
+                        required = true
+                        fullWidth = true
+                        name = "username"
+                        label = ReactNode("Username")
+                        onChange = {
+                            username = (it.target as HTMLInputElement).value
+                        }
+                    }
+                }
+
+                TextField {
+                    attrs {
+                        margin = FormControlMargin.normal
+                        required = true
+                        fullWidth = true
+                        type = InputType.password
+                        name = "password"
+                        label = ReactNode("Password")
+                        onChange = {
+                            password = (it.target as HTMLInputElement).value
+                        }
+                    }
+                }
+
+                FormControlLabel {
+                    attrs.label = ReactNode("Remember me")
+                    attrs.control = Checkbox.create {
+                        value = "remember"
+                        checked = remember
+                        onChange = { _, checked ->
+                            remember = checked
+                        }
+                    }
+                }
+                FormHelperText {
+                    attrs.error = error != null
+                    +(error ?: " ")
+                }
+
+                Button {
+                    attrs {
+                        type = ButtonType.submit
+                        fullWidth = true
+                        variant = ButtonVariant.contained
+                        sx {
+                            marginTop = 3.px
+                            marginBottom = 2.px
+                        }
+                    }
+                    +"Sign In"
                 }
             }
         }
@@ -107,49 +174,36 @@ val LoginCardComponent = fc<LoginCardComponentProps>("LoginCardComponent") { pro
 
 
 val LoginPageComponent = fc<Props>("LoginComponent") { _ ->
-    val (error, errorSet) = useState<String?>(null)
+    val navigate = useNavigate()
+
     if (window.localStorage.getItem("loggedIn") == "yes") {
         Navigate {
             attrs.to = "/account"
         }
     }
-    div {
-        div("center-align") {
-            styledImg(src = "/logo.png") {
-                css {
-                    marginBottom = 100.px
-                    marginTop = 100.px
-                }
+    Container {
+        attrs.component = main
+        attrs.maxWidth = "sm"
+
+        CssBaseline { }
+
+        LoginCardComponent { }
+    }
+    Link {
+        attrs {
+            variant = ReactHTML.h5
+            underline = LinkUnderline.none
+            href = "#"
+            sx {
+                position = Position.absolute
+                right = 15.px
+                bottom = 15.px
+            }
+            onClick = {
+                it.preventDefault()
+                navigate("/contact")
             }
         }
-        if (error != null) {
-            styledDiv {
-                css {
-                    classes += "center-align"
-                    color = Color.red
-                    alignSelf = Align.center
-                }
-                +error
-            }
-        }
-        loginCardComponent { setError = errorSet }
+        +"Contact"
     }
-
-    styledDiv {
-        css {
-            position = Position.fixed
-            right = 16.px
-            bottom = 10.px
-            fontSize = 22.px
-        }
-
-        Link {
-            attrs.to = "/contact"
-            +"Contact"
-        }
-    }
-}
-
-fun RBuilder.loginCardComponent(handler: LoginCardComponentProps.() -> Unit) = child(LoginCardComponent) {
-    attrs { handler() }
 }

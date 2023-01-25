@@ -27,9 +27,12 @@ import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.partialcontent.PartialContent
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
 import io.ktor.server.websocket.*
+import io.ktor.util.date.*
 import org.flywaydb.core.Flyway
-import org.koin.core.context.startKoin
+import org.koin.ktor.ext.inject
+import org.koin.ktor.plugin.Koin
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.time.Duration
@@ -39,6 +42,14 @@ fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
 
 
+fun ApplicationCall.getCookieDomain(config: PhFilesConfig): String {
+    return if (config.development) {
+        request.host()
+    } else{
+        config.cookie.domain
+    }
+}
+
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
@@ -46,20 +57,21 @@ fun Application.module(testing: Boolean = false) {
     logger.info("Starting application")
 
     logger.info("Starting Koin")
-    val koin = startKoin {
+
+    install(Koin) {
         modules(PhFilesModule.module)
-    }.koin
+    }
 
     logger.info("Starting flyway migration")
-    val flyway = koin.get<Flyway>()
+    val flyway by inject<Flyway>()
     flyway.migrate()
     logger.info("Flyway migration successful")
 
-    val userDao = koin.get<UserDao>()
-    val cookieDao = koin.get<CookieDao>()
-    val fileDao = koin.get<FileDao>()
+    val userDao by inject<UserDao>()
+    val cookieDao by inject<CookieDao>()
+    val fileDao by inject<FileDao>()
 
-    val phConfig = koin.get<PhFilesConfig>()
+    val phConfig by inject<PhFilesConfig>()
 
     install(AutoHeadResponse)
     install(DataConversion) { }
@@ -110,6 +122,7 @@ fun Application.module(testing: Boolean = false) {
         } else {
             allowHost(phConfig.cors.host, schemes = listOf("http", "https"))
         }
+        allowCredentials = true
     }
 
     install(CallLogging) {
@@ -135,12 +148,17 @@ fun Application.module(testing: Boolean = false) {
         exception { call: ApplicationCall, cause: Exception ->
             when (cause) {
                 is UnauthorizedException -> {
-                    call.response.cookies.appendExpired(
+                    call.response.cookies.append(
                         name = "id",
-                        path = "/",
-                        domain = phConfig.cookie.domain
+                        value = "",
+                        expires = GMTDate.START,
+                        domain = call.getCookieDomain(phConfig),
+                        secure = phConfig.cookie.secure,
+                        httpOnly = true,
+                        extensions = mapOf("SameSite" to "Strict"),
+                        path = "/"
                     )
-                    call.respond(message = cause.content ?: "", status = io.ktor.http.HttpStatusCode.Unauthorized)
+                    call.respond(message = cause.content ?: "", status = HttpStatusCode.Unauthorized)
                 }
                 is HttpException -> {
                     call.respond(message = cause.content ?: "", status = cause.statusCode)
@@ -157,7 +175,7 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
-        accountRoutes(userDao, cookieDao, phConfig.cookie, fileDao, phConfig.contact)
+        accountRoutes(userDao, cookieDao, phConfig, fileDao)
         fileRoutes(fileDao, phConfig)
         shareRoutes()
         static("/") {
@@ -166,6 +184,7 @@ fun Application.module(testing: Boolean = false) {
             resource("favicon.png")
             resource("index.html")
             resource("logo.png")
+            resource("logo-dark.png")
             resource("thumbnail.png")
             resource("client.js")
             resource("client.js.map")

@@ -1,6 +1,7 @@
 package com.perpheads.files
 
-import kotlinx.js.jso
+import js.core.jso
+
 
 external interface ToastConfig {
     var html: String

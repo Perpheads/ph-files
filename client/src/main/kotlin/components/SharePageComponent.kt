@@ -2,24 +2,28 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.WebSocketSender
-import com.perpheads.files.logoutIfUnauthorized
 import com.perpheads.files.data.ShareFileResponse
+import com.perpheads.files.logoutIfUnauthorized
+import com.perpheads.files.useScope
+import csstype.*
+import js.core.get
+import js.core.jso
 import kotlinx.browser.window
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
-import kotlinx.css.*
-import org.w3c.files.File
-import org.w3c.files.get
-import react.Props
-import react.dom.*
-import react.fc
+import mui.icons.material.Share
+import mui.material.*
+import mui.material.styles.TypographyVariant
+import mui.system.sx
+import org.w3c.dom.BeforeUnloadEvent
+import react.*
 import react.router.useNavigate
-import react.useEffectOnce
-import react.useState
-import styled.css
-import styled.styledButton
-import styled.styledDiv
-import styled.styledInput
+import web.file.File
+
+private val preventPageClose: (BeforeUnloadEvent) -> String? = {
+    it.preventDefault()
+    "There are file transfers in progress, are you sure you want to close this page?"
+}
 
 val ShareComponent = fc<Props>("ShareComponent") {
     val navigate = useNavigate()
@@ -31,9 +35,23 @@ val ShareComponent = fc<Props>("ShareComponent") {
     var completed by useState(false)
     var error by useState<String>()
     var dropZoneHovered by useState(false)
+    var currentAlert by useState<AlertData?>(null)
+    val scope = useScope()
+
+    useEffect(createdLink, completed) {
+        if (!completed && createdLink != null) {
+            window.onbeforeunload = preventPageClose
+        } else {
+            window.onbeforeunload = null
+        }
+
+        cleanup {
+            window.onbeforeunload = null
+        }
+    }
 
     useEffectOnce {
-        MainScope().launch {
+        scope.launch {
             logoutIfUnauthorized(navigate) {
                 ApiClient.getAccountInfo()
             }
@@ -44,7 +62,7 @@ val ShareComponent = fc<Props>("ShareComponent") {
     }
 
     fun createSender(file: File) {
-        val sender = WebSocketSender("/share/ws", file)
+        val sender = WebSocketSender("/share/ws", file, scope)
         sender.onLinkCreated = {
             createdLink = "${window.location.origin}/#/share/$it"
         }
@@ -56,150 +74,146 @@ val ShareComponent = fc<Props>("ShareComponent") {
         sender.open()
     }
 
-    div {
-        navBar {
-            message = "Share Files"
-            showSearchBar = false
-            onSearchChanged = {}
+    Page {
+        attrs.name = "Share Files"
+        attrs.searchBarEnabled = false
+        attrs.currentAlert = currentAlert
+        attrs.onAlertHidden = {
+            currentAlert = null
         }
-        div("container") {
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
-                    paddingBottom = 18.px
-                    height = 100.pct
-                    paddingTop = 10.px
-                    paddingRight = 10.px
-                    paddingLeft = 10.px
+
+        val currentLink = createdLink
+        val currentProgress = downloadProgress
+        val file = droppedFile
+        if (currentLink == null) {
+            Paper {
+                attrs.sx {
+                    width = 100.pct
+                    height = 300.px
+                    display = Display.flex
+                    alignItems = AlignItems.center
+                    justifyContent = JustifyContent.center
+                    flexDirection = FlexDirection.row
                 }
-                div("col l4 center-align") {
-                    error?.let {
-                        styledDiv {
-                            css {
-                                color = Color.red
-                            }
-                            +"Error: $it"
-                        }
-                    }
-                    val currentLink = createdLink
-                    val currentProgress = downloadProgress
-                    val file = droppedFile
-                    if (currentLink == null) {
-                        styledDiv {
-                            css {
-                                classes += "card"
-                                marginBottom = 10.px
-                                paddingBottom = 10.px
-                                paddingTop = 10.px
-                                paddingRight = 10.px
-                                paddingLeft = 10.px
-                            }
-                            styledDiv {
-                                css {
-                                    minHeight = 200.px
-                                    if (dropZoneHovered) {
-                                        this.put("outline", "dashed red")
-                                    } else {
-                                        this.put("outline", "dashed green")
-                                    }
-                                }
-                                +"Drop a File here"
-                                this.attrs.onDragLeave = {
-                                    dropZoneHovered = false
-                                }
-                                this.attrs.onDragOver = {
-                                    dropZoneHovered = true
-                                    it.preventDefault()
-                                }
-                                this.attrs.onDrop = {
-                                    dropZoneHovered = false
-                                    it.preventDefault()
-                                    if (dropEnabled) {
-                                        droppedFile = it.dataTransfer.files[0]
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (file != null) {
-                        SharePreviewComponent {
-                            attrs.file = ShareFileResponse(file.name, file.size.toLong())
-                        }
-                    }
+                attrs.elevation = if (dropZoneHovered) 8 else 2
 
+                attrs.onDragLeave = {
+                    dropZoneHovered = false
+                }
+                attrs.onDragOver = {
+                    dropZoneHovered = true
+                    it.preventDefault()
+                }
+                attrs.onDrop = {
+                    dropZoneHovered = false
+                    it.preventDefault()
                     if (dropEnabled) {
-                        styledButton {
-                            css {
-                                classes += "btn waves-effect waves-light"
-                                if (droppedFile == null || !dropEnabled) {
-                                    classes += "disabled"
-                                }
-                            }
-                            attrs.onClick = {
-                                if (file != null && dropEnabled) {
-                                    dropEnabled = false
-                                    createSender(file)
-                                }
-                            }
+                        droppedFile = it.dataTransfer.files[0]
+                    }
+                }
 
-                            +"Create Link"
-                        }
-                    } else if (currentLink != null && currentProgress == null) {
-                        div {
-                            p {
-                                +"Send this link to whoever should download this file."
-                            }
-                            div("row") {
-                                div("col s11") {
-                                    styledInput {
-                                        attrs.disabled = true
-                                        css {
-                                        }
-                                        attrs.value = currentLink
-                                    }
-                                }
-                                div("col s1") {
-                                    button(classes = "waves-effect waves-light btn") {
-                                        attrs.onClick = {
-                                            window.navigator.clipboard.writeText(createdLink ?: "")
-                                        }
-                                        i("material-icons") {
-                                            +"content_copy"
-                                        }
-                                    }
-                                }
+                Typography {
+                    attrs.variant = TypographyVariant.h5
+                    +"Drop File Here"
+                }
+            }
+        }
+
+        if (file != null) {
+            SharePreviewComponent {
+                attrs.file = ShareFileResponse(file.name, file.size.toLong())
+            }
+        }
+
+        if (dropEnabled) {
+            Button {
+                attrs.sx {
+                    marginTop = 16.px
+                }
+                attrs.disabled = file == null
+                attrs.color = ButtonColor.secondary
+                attrs.variant = ButtonVariant.contained
+                attrs.endIcon = Share.create()
+                attrs.onClick = {
+                    if (file != null && dropEnabled) {
+                        dropEnabled = false
+                        createSender(file)
+                    }
+                }
+                +"Create Link"
+            }
+        } else if (currentLink != null && currentProgress == null) {
+            Typography {
+                attrs.variant = TypographyVariant.body1
+                +"Send this link to whoever should download this file."
+            }
+
+            TextField {
+                attrs {
+                    fullWidth = true
+                    inputProps = jso<InputBaseProps> {
+                        this.readOnly = true
+                    }.asDynamic() as? InputBaseComponentProps
+                    label = ReactNode("Share Link")
+                    onClick = {
+                        it.stopPropagation()
+                        it.preventDefault()
+                    }
+                    onFocus = {
+                        it.stopPropagation()
+                        it.preventDefault()
+                        scope.launch {
+                            currentAlert = try {
+                                window.navigator.clipboard.writeText(currentLink).await()
+                                AlertData("Share link copied successfully", AlertColor.info)
+                            } catch (e: Exception) {
+                                AlertData("Failed to copy share link", AlertColor.error)
                             }
                         }
                     }
+                    value = currentLink
+                }
+            }
+        }
 
-                    if (currentProgress != null && file != null) {
-                        div {
-                            p {
-                                +"File upload in progress"
-                            }
-                            p {
-                                +"Note: This window needs to stay open for the file transfer to complete."
-                            }
-                            val percentage = (currentProgress.toDouble() * 100 / file.size.toDouble())
-                            div("progress") {
-                                styledDiv {
-                                    css {
-                                        classes += "determinate"
-                                        width = percentage.pct
-                                    }
-                                }
-                            }
-                            p {
-                                val displayPercentage = percentage.asDynamic().toFixed(1).unsafeCast<String>()
-                                +"Upload Progress: $displayPercentage%"
-                            }
-                        }
-                        if (completed) {
-                            p {
-                                +"Upload Completed!"
-                            }
-                        }
-                    }
+        if (currentProgress != null && file != null) {
+            Typography {
+                attrs.variant = TypographyVariant.h5
+                attrs.sx {
+                    marginTop = 20.px
+                }
+                if (completed) {
+                    +"File upload completed"
+                } else {
+                    +"File upload in progress"
+                }
+            }
+            Typography {
+                attrs.variant = TypographyVariant.body1
+                attrs.sx {
+                    marginTop = 3.px
+                }
+                +"Note: This window needs to stay open for the file transfer to complete."
+            }
+            val percentage = (currentProgress.toDouble() * 100 / file.size)
+            LinearProgress {
+                attrs.variant = LinearProgressVariant.determinate
+                attrs.sx {
+                    width = 100.pct
+                    marginTop = 4.px
+                }
+            }
+
+            val displayPercentage = percentage.asDynamic().toFixed(1).unsafeCast<String>()
+            Typography {
+                attrs.variant = TypographyVariant.body1
+                attrs.sx {
+                    marginTop = 10.px
+                }
+                if (completed) {
+                    +"Completed"
+                } else {
+                    +"Upload Progress: $displayPercentage%"
                 }
             }
         }

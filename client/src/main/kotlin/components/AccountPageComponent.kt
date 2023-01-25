@@ -3,23 +3,32 @@ package com.perpheads.files.components
 import com.perpheads.files.*
 import com.perpheads.files.ApiClient.uploadFile
 import com.perpheads.files.data.FileResponse
-import kotlinx.browser.document
+import csstype.Position
+import csstype.WhiteSpace
+import csstype.pct
+import csstype.px
+import js.core.asList
 import kotlinx.coroutines.launch
-import kotlinx.css.*
+import kotlinx.css.Display
+import kotlinx.css.display
 import kotlinx.html.InputType
 import kotlinx.html.id
-import org.w3c.dom.HTMLInputElement
-import org.w3c.dom.asList
-import org.w3c.files.File
-import react.Props
-import react.dom.*
-import react.fc
+import mui.icons.material.Add
+import mui.material.*
+import mui.material.styles.Theme
+import mui.material.styles.TypographyVariant
+import mui.material.styles.useTheme
+import mui.system.Breakpoint
+import mui.system.sx
+import react.*
+import react.dom.onChange
 import react.router.useLocation
 import react.router.useNavigate
-import react.useEffect
-import react.useState
 import styled.css
-import styled.styledDiv
+import styled.styledInput
+import web.dom.document
+import web.file.File
+import web.html.HTMLInputElement
 
 external interface AccountPageProps : Props {
 }
@@ -30,6 +39,29 @@ private fun <T> List<T>.prepend(elem: T): List<T> {
     return newList
 }
 
+private var uploadId: Int = 0
+
+
+private fun RBuilder.tableHeader(text: String, body: (RElementBuilder<TableCellProps>).() -> Unit = {}) {
+    TableCell {
+        Typography {
+            attrs {
+                variant = TypographyVariant.h6
+            }
+            +text
+        }
+        body()
+    }
+
+}
+
+data class PaginationData(
+    val totalPages: Int,
+    val currentPage: Int,
+    val pageStart: Int,
+    val pageEnd: Int
+)
+
 val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     val (account, _) = useAccount()
 
@@ -38,10 +70,16 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     val navigate = useNavigate()
     val page = parameters["page"]?.toIntOrNull() ?: 1
     val search = parameters["search"] ?: ""
+    val username = account?.username
+
+    val theme = useTheme<Theme>()
+    val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
+    val shouldShowDetails = useMediaQuery(theme.breakpoints.up(Breakpoint.sm))
 
     var paginationData by useState(PaginationData(1, 1, 1, 1))
     var files by useState<List<FileResponse>>(emptyList())
     var queueFiles by useState(emptyList<UploadQueueEntry>())
+    val scope = useScope()
 
     fun changeUrl(newPage: Int, newSearch: String) {
         val params = Parameters.build {
@@ -53,17 +91,21 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
         navigate("/account?${params}")
     }
 
-    fun doUploadFile(file: File) {
-        ApiClient.mainScope.launch {
-            val progressEntry = UploadQueueEntry(file.name, 0.0)
-            queueFiles = queueFiles.prepend(progressEntry)
-            val response = uploadFile(file) { progress ->
-                progressEntry.progress = progress
-                queueFiles = queueFiles.toList()
+    fun doUploadFiles(uploadFiles: List<File>) {
+        val entries = uploadFiles.map { file ->
+            val progressEntry = UploadQueueEntry(file.name, 0.0, uploadId++)
+            scope.launch {
+                val response = uploadFile(file) { progress ->
+                    progressEntry.progress = progress
+                    queueFiles = queueFiles.toList()
+                }
+                files = files.take(8).prepend(response)
+                queueFiles = queueFiles.filter { it !== progressEntry }
             }
-            files = files.take(8).prepend(response)
-            queueFiles = queueFiles.filter { it !== progressEntry }
+            progressEntry
         }
+        queueFiles = entries + queueFiles
+
     }
 
     suspend fun loadFiles() {
@@ -93,103 +135,135 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     }
 
     useEffect(location) {
-        ApiClient.mainScope.launch {
+        scope.launch {
             loadFiles()
         }
     }
 
-    div {
-        navBar {
-            val username = account?.username
-            message = if (username != null) {
-                "Hey there, $username."
-            } else {
-                "Hey there."
+    Page {
+        attrs {
+            if (!smallScreen) {
+                name = if (username != null) {
+                    "Hey there, $username."
+                } else {
+                    "Hey there."
+                }
             }
-            this.search = search
-            showSearchBar = true
+            searchBarEnabled = true
             onSearchChanged = {
-                changeUrl(1, it)
+                changeUrl(page, it)
             }
         }
-        div("container") {
-            attrs {
-                onDragOver = { it.preventDefault() }
-                onDrop = { event ->
-                    event.preventDefault()
-                    event.dataTransfer.files.asList().forEach { file ->
-                        doUploadFile(file)
-                    }
-                }
+
+        TableContainer {
+            attrs.sx {
+                width = 100.pct
             }
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
-                    paddingBottom = 18.px
-                    height = 100.pct
-                    paddingTop = 10.px
-                    paddingRight = 10.px
-                    paddingLeft = 10.px
-                }
-                fileList {
-                    this.files = files
-                    deleteFile = { file ->
-                        ApiClient.mainScope.launch {
-                            doDelete(file)
-                            val newFiles = files.filter { file.fileId != it.fileId }
-                            files = newFiles
+
+            attrs.onDragOver = {
+                it.preventDefault()
+            }
+
+            attrs.onDrop = {
+                it.preventDefault()
+                doUploadFiles(it.dataTransfer.files.asList())
+            }
+
+            Table {
+                TableHead {
+                    TableRow {
+                        tableHeader("Name")
+                        if (shouldShowDetails) {
+                            tableHeader("Date")
+                            tableHeader("Size")
                         }
-                    }
-                    renameFile = { file, newName ->
-                        ApiClient.mainScope.launch {
-                            doRename(file, newName)
-                            val newFiles = files.map {
-                                if (file.fileId == it.fileId) it.copy(fileName = newName) else it
+                        tableHeader("") {
+                            attrs.align = TableCellAlign.right
+                            attrs.sx {
+                                width = 1.px
+                                whiteSpace = WhiteSpace.nowrap
                             }
-                            files = newFiles
                         }
                     }
                 }
-                paginationComponent {
-                    this.paginationData = paginationData
-                    this.onPageChange = {
-                        changeUrl(it, search)
+                TableBody {
+                    for (f in files) {
+                        file {
+                            key = f.fileId.toString()
+                            file = f
+                            showDetails = shouldShowDetails
+
+                            deleteFile = { file ->
+                                scope.launch {
+                                    doDelete(file)
+                                    val newFiles = files.filter { file.fileId != it.fileId }
+                                    files = newFiles
+                                }
+                            }
+
+
+                            renameFile = { file, newName ->
+                                scope.launch {
+                                    doRename(file, newName)
+                                    val newFiles = files.map {
+                                        if (file.fileId == it.fileId) it.copy(fileName = newName) else it
+                                    }
+                                    files = newFiles
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        if (queueFiles.isNotEmpty()) {
-            styledDiv {
-                css {
-                    position = Position.absolute
-                    bottom = 16.px
-                    left = 24.px
-                    minWidth = 30.pct
+
+        Pagination {
+            attrs {
+                count = paginationData.pageEnd
+                defaultPage = paginationData.currentPage
+                this.page = paginationData.currentPage
+                showFirstButton = true
+                showLastButton = true
+                onChange = { _, num ->
+                    changeUrl(num.toInt(), search)
                 }
-                uploadQueue {
-                    entries = queueFiles
+                sx {
+                    marginTop = 16.px
                 }
             }
         }
-        div("fixed-action-btn") {
-            a(classes = "btn-floating btn-large red") {
-                attrs.onClick = { _ ->
+
+        if (queueFiles.isNotEmpty()) {
+            uploadQueue {
+                entries = queueFiles
+            }
+        }
+
+        Fab {
+            attrs {
+                color = FabColor.secondary
+                sx {
+                    position = Position.fixed
+                    right = 32.px
+                    bottom = 32.px
+                }
+                onClick = {
                     document.getElementById("file-input")?.let { elem ->
                         (elem as HTMLInputElement).click()
                     }
                 }
-                i("large material-icons") {
-                    +"add"
-                }
-                input(InputType.file) {
-                    attrs.id = "file-input"
-                    attrs.onChange = { event ->
-                        (event.target as HTMLInputElement).files?.let { inputFiles ->
-                            inputFiles.asList().forEach { file ->
-                                doUploadFile(file)
-                            }
-                        }
-                    }
+            }
+            Add { }
+        }
+
+        styledInput(InputType.file) {
+            css {
+                display = Display.none
+            }
+            attrs.id = "file-input"
+            attrs.onChange = { event ->
+                (event.target as HTMLInputElement).files?.let { inputFiles ->
+                    doUploadFiles(inputFiles.asList())
                 }
             }
         }

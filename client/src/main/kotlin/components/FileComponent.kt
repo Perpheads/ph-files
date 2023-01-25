@@ -1,101 +1,140 @@
 package com.perpheads.files.components
 
+import com.perpheads.files.ApiClient
 import com.perpheads.files.data.FileResponse
 import com.perpheads.files.data.validateFilename
-import com.perpheads.files.showToast
-import kotlinx.css.*
-import kotlinx.html.InputType
-import kotlinx.html.id
-import kotlinx.html.js.onClickFunction
-import org.w3c.dom.HTMLInputElement
+import csstype.AlignItems
+import csstype.Display
+import csstype.FlexDirection
+import csstype.px
+import mui.icons.material.DeleteOutline
+import mui.icons.material.Edit
+import mui.material.*
+import mui.system.sx
 import react.*
-import react.dom.*
-import styled.css
-import styled.styledI
-import styled.styledImg
+import web.html.HTMLInputElement
+import web.window.WindowTarget
 
 external interface FileComponentProps : Props {
     var file: FileResponse
     var deleteFile: (FileResponse) -> Unit
     var renameFile: (FileResponse, String) -> Unit
+    var showDetails: Boolean
 }
 
 val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
-    val (editing, setEditing) = useState(false)
+    var editing by useState(false)
+    var invalidFileName by useState(false)
     val extension = "." + props.file.fileName.split(".").last()
 
-    // Might be bad to do this for every component
-    useEffectOnce {
-        js("M.Dropdown.init(document.querySelectorAll(\".dropdown-trigger\"))")
-        Unit
-    }
 
-    val imgSrc = "/${props.file.fileId}/thumbnail"
-    tr {
-        td {
-            styledImg(src = imgSrc) {
-                css {
-                    minWidth = 48.px
-                    maxWidth = 48.px
+    TableRow {
+        TableCell {
+            Box {
+                attrs.sx {
+                    display = Display.flex
+                    flexDirection = FlexDirection.row
+                    alignItems = AlignItems.center
                 }
-            }
-        }
-        td {
-            if (editing) {
-                input(type = InputType.text) {
-                    attrs.autoFocus = true
-                    attrs.defaultValue = props.file.fileName.removeSuffix(extension)
-                    attrs.onBlur = {
-                        setEditing(false)
-                    }
-                    attrs.onKeyPress = { event ->
-                        if (event.key == "Enter") {
-                            val newName = (event.target as HTMLInputElement).value + extension
-                            if (props.file.fileName != newName) {
-                                if (validateFilename(newName)) {
-                                    props.renameFile(props.file, newName)
-                                    (event.target as HTMLInputElement).blur()
-                                } else {
-                                    showToast("Invalid filename")
-                                }
-                            } else {
-                                (event.target as HTMLInputElement).blur()
-                            }
+                Avatar {
+                    attrs {
+                        src = ApiClient.getLocalLink("/${props.file.fileId}/thumbnail")
+                        variant = AvatarVariant.square
+                        sx {
+                            marginRight = 20.px
                         }
                     }
                 }
-            } else {
-                a(href = "/${props.file.link}", target = "_blank") {
-                    +props.file.fileName
+                if (editing) {
+                    TextField {
+                        attrs {
+                            margin = FormControlMargin.none
+                            required = true
+                            autoFocus = true
+                            hiddenLabel = true
+                            fullWidth = true
+                            name = "Filename"
+                            variant = FormControlVariant.standard
+                            size = Size.small
+                            label = ReactNode("Filename")
+                            defaultValue = props.file.fileName.removeSuffix(extension)
+                            if (invalidFileName) {
+                                helperText = ReactNode("Invalid filename")
+                                error = true
+                            }
+
+                            onKeyDown = { event ->
+                                if (event.key == "Enter") {
+                                    val newName = (event.target as HTMLInputElement).value + extension
+                                    if (props.file.fileName != newName) {
+                                        if (validateFilename(newName)) {
+                                            props.renameFile(props.file, newName)
+                                            (event.target as HTMLInputElement).blur()
+                                        } else {
+                                            invalidFileName = true
+                                        }
+                                    } else {
+                                        (event.target as HTMLInputElement).blur()
+                                    }
+                                }
+                            }
+
+                            onBlur = {
+                                editing = false
+                                invalidFileName = false
+                            }
+                        }
+                    }
+                } else {
+                    Link {
+                        attrs.href = ApiClient.getLocalLink("/${props.file.link}")
+                        attrs.target = WindowTarget._blank
+                        attrs.underline = LinkUnderline.none
+                        +props.file.fileName
+                    }
                 }
             }
         }
-        td { +props.file.formattedUploadDate }
-        td { +props.file.humanReadableByteSize() }
-        td {
-            a(classes = "dropdown-trigger") {
-                attrs["data-target"] = "dropdown-${props.file.fileId}"
-                styledI {
-                    css {
-                        classes += "material-icons"
-                        cursor = Cursor.pointer
-                    }
-                    +"more_horiz"
-                }
+        if (props.showDetails) {
+            TableCell {
+                +props.file.formattedUploadDate
             }
+            TableCell {
+                +props.file.humanReadableByteSize()
+            }
+        }
+        TableCell {
+            Box {
+                attrs.sx {
+                    display = Display.flex
+                    flexDirection = FlexDirection.row
+                    alignItems = AlignItems.center
+                }
+                IconButton {
+                    attrs {
+                        size = Size.small
+                        color = IconButtonColor.info
+                        onClick = {
+                            editing = true
+                            invalidFileName = false
+                        }
+                    }
 
-            ul(classes = "dropdown-content") {
-                attrs.id = "dropdown-${props.file.fileId}"
-                li {
-                    a {
-                    attrs.onClickFunction = { props.deleteFile(props.file) }
-                        +"Delete"
+                    Edit {
+
                     }
                 }
-                li {
-                    a {
-                        attrs.onClickFunction = { setEditing(true) }
-                        +"Rename"
+                IconButton {
+                    attrs {
+                        size = Size.small
+                        color = IconButtonColor.error
+                        onClick = {
+                            props.deleteFile(props.file)
+                        }
+                    }
+
+                    DeleteOutline {
+
                     }
                 }
             }

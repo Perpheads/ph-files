@@ -1,32 +1,33 @@
 package com.perpheads.files.components
 
-import kotlinx.css.*
-import react.Props
-import react.RBuilder
-import react.dom.*
-import react.fc
-import styled.css
-import styled.styledDiv
+import csstype.Position
+import csstype.pct
+import csstype.px
+import mui.material.*
+import mui.material.styles.Theme
+import mui.material.styles.useTheme
+import mui.system.Breakpoint
+import mui.system.sx
+import react.*
 
 
 data class UploadQueueEntry(
     val fileName: String,
-    var progress: Double
+    var progress: Double,
+    val uploadId: Int
 )
 external interface UploadQueueEntryProps: Props {
     var entry: UploadQueueEntry
 }
 
 val UploadQueueEntryComponent = fc<UploadQueueEntryProps>("UploadQueueEntryComponent") { props ->
-    li("collection-item") {
-        +props.entry.fileName
-        div("progress") {
-            styledDiv {
-                css {
-                    classes += "determinate"
-                    width = (props.entry.progress * 100).toInt().pct
-                }
-            }
+    ListItemText {
+        attrs {
+            primary = ReactNode(props.entry.fileName)
+        }
+        attrs.secondary = LinearProgress.create {
+            value = props.entry.progress
+            variant = LinearProgressVariant.determinate
         }
     }
 }
@@ -40,11 +41,41 @@ external interface UploadQueueProps: Props {
 }
 
 val UploadQueueComponent = fc<UploadQueueProps>("UploadQueueComponent") { props ->
-    ul("collection with-header") {
-        li("collection-header") {
-            h6 { +"Upload Queue" }
+
+    val theme = useTheme<Theme>()
+    val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
+
+    Card {
+        attrs.sx {
+            position = Position.fixed
+            bottom = 32.px
+            left = 32.px
+            if (smallScreen) {
+                right = 32.px
+            } else {
+                width = 100.pct
+                maxWidth = 600.px
+            }
         }
-        props.entries.forEach { uploadQueueEntry { entry = it } }
+
+        CardHeader {
+            attrs.title = ReactNode("Upload Queue")
+        }
+        Divider {
+            attrs.variant = DividerVariant.fullWidth
+        }
+        CardContent {
+            List {
+                for (f in props.entries) {
+                    ListItem {
+                        attrs.key = f.uploadId.toString()
+                        uploadQueueEntry {
+                            entry = f
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

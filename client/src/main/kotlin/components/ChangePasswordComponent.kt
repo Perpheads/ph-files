@@ -2,17 +2,19 @@ package com.perpheads.files.components
 
 import com.perpheads.files.ApiClient
 import com.perpheads.files.logout
+import com.perpheads.files.useScope
+import csstype.px
 import kotlinx.coroutines.launch
-import kotlinx.css.*
-import kotlinx.html.InputType
-import org.w3c.dom.HTMLInputElement
+import mui.material.*
+import mui.system.sx
 import react.Props
-import react.dom.*
-import react.dom.events.KeyboardEventHandler
+import react.ReactNode
+import react.dom.html.ButtonType
+import react.dom.html.ReactHTML
+import react.dom.onChange
 import react.fc
 import react.router.useNavigate
 import react.useState
-import styled.*
 
 val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
     val navigate = useNavigate()
@@ -20,6 +22,7 @@ val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
     val (newPassword, setNewPassword) = useState("")
     val (repeatNewPassword, setRepeatNewPassword) = useState("")
     val (error, setError) = useState("")
+    val scope = useScope()
 
     fun changePassword() {
         if (password.isEmpty()) {
@@ -29,100 +32,90 @@ val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
         } else if (repeatNewPassword != newPassword) {
             setError("New password does not match repeated password")
         } else {
-            ApiClient.mainScope.launch {
-                ApiClient.changePassword(password, newPassword)
-                logout(navigate)
+            scope.launch {
+                try {
+                    ApiClient.changePassword(password, newPassword)
+                    logout(navigate)
+                } catch (e: Exception) {
+                    setError("Failed to change password (incorrect existing password?)")
+                }
             }
         }
     }
 
-    val onEnterPressed: KeyboardEventHandler<*> = { event ->
-        if (event.key == "Enter") {
-            changePassword()
-        }
+    DialogTitle {
+        +"Change Password"
     }
+    Divider { }
+    DialogContent {
+        Box {
+            attrs.component = ReactHTML.form
+            attrs.sx {
+                marginTop = 2.px
+            }
+            attrs.onSubmit = {
+                it.preventDefault()
+                changePassword()
+            }
 
-    div {
-        navBar { message = "Change Password" }
-
-        div("container") {
-            styledDiv {
-                css {
-                    classes += "card fadeIn animated"
-                    padding(10.px)
-                    paddingBottom = 18.px
-                    height = 100.pct
-                    minHeight = 100.pct
-                }
-                div("col l4 center-align") {
-                    if (error.isEmpty()) {
-                            styledDiv {
-                            css {
-                                classes += "center-align"
-                                color = Color.red
-                            }
-                            +error
-                        }
-                    }
-                    div("input-field col s8") {
-                        styledP {
-                            css {
-                                classes += "flow-text"
-                                fontSize = 15.px
-                            }
-                            +"Existing Password"
-                        }
-                        input(InputType.password) {
-                            attrs {
-                                placeholder = "Existing Password"
-                                onInput = { event ->
-                                    setPassword((event.target as HTMLInputElement).value)
-                                }
-                                onKeyPress = onEnterPressed
-                            }
-                        }
-                    }
-                    div("input-field col s8") {
-                        styledP {
-                            css {
-                                classes += "flow-text"
-                                fontSize = 15.px
-                            }
-                            +"New Password"
-                        }
-                        input(InputType.password) {
-                            attrs {
-                                placeholder = "New Password"
-                                onInput = { event ->
-                                    setNewPassword((event.target as HTMLInputElement).value)
-                                }
-                                onKeyPress = onEnterPressed
-                            }
-                        }
-                    }
-                    div("input-field col s8") {
-                        styledP {
-                            css {
-                                classes += "flow-text"
-                                fontSize = 15.px
-                            }
-                            +"Repeat Password"
-                        }
-                        input(InputType.password) {
-                            attrs {
-                                placeholder = "Repeat Password"
-                                onInput = { event ->
-                                    setRepeatNewPassword((event.target as HTMLInputElement).value)
-                                }
-                                onKeyPress = onEnterPressed
-                            }
-                        }
-                    }
-                    button(classes = "btn waves-effect waves-light") {
-                        attrs.onClick = { changePassword() }
-                        +"Change Password"
+            TextField {
+                attrs {
+                    margin = FormControlMargin.normal
+                    required = true
+                    fullWidth = true
+                    name = "existing password"
+                    type = web.html.InputType.password
+                    label = ReactNode("Existing Password")
+                    onChange = {
+                        setPassword((it.target as web.html.HTMLInputElement).value)
                     }
                 }
+            }
+
+            TextField {
+                attrs {
+                    margin = FormControlMargin.normal
+                    required = true
+                    fullWidth = true
+                    type = web.html.InputType.password
+                    name = "new password"
+                    label = ReactNode("New Password")
+                    onChange = {
+                        setNewPassword((it.target as web.html.HTMLInputElement).value)
+                    }
+                }
+            }
+
+            TextField {
+                attrs {
+                    margin = FormControlMargin.normal
+                    required = true
+                    fullWidth = true
+                    type = web.html.InputType.password
+                    name = "repeat password"
+                    label = ReactNode("Repeat New Password")
+                    onChange = {
+                        setRepeatNewPassword((it.target as web.html.HTMLInputElement).value)
+                    }
+                }
+            }
+
+            FormHelperText {
+                attrs.error = error != ""
+                +error
+            }
+
+            Button {
+                attrs {
+                    type = ButtonType.submit
+                    fullWidth = true
+                    variant = ButtonVariant.contained
+                    sx {
+                        marginTop = 12.px
+                        marginBottom = 2.px
+                    }
+                }
+                +"Change Password"
             }
         }
     }

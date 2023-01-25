@@ -8,15 +8,30 @@ import com.perpheads.files.wrappers.axiosPost
 import kotlinx.coroutines.MainScope
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import org.w3c.files.File
-import org.w3c.xhr.FormData
-import org.w3c.xhr.XMLHttpRequest
+import web.file.File
+import web.http.FormData
+import web.xhr.XMLHttpRequest
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 object ApiClient {
-    val mainScope = MainScope()
+    private fun isDevelopment(): Boolean {
+        return js("DEVELOPMENT_MODE") == true
+    }
+
+    val host: String = if (isDevelopment()) {
+        web.location.location.hostname + ":8080"
+    } else web.location.location.host
+
+    private val location: String = if (isDevelopment()) {
+        web.location.location.protocol + "//" + web.location.location.hostname + ":8080"
+    } else ""
+
+
+    fun getLocalLink(path: String): String {
+        return location + path
+    }
 
     object UnauthorizedException : Exception()
     object NotFoundException : Exception()
@@ -35,7 +50,7 @@ object ApiClient {
             page = page,
             entriesPerPage = entriesPerPage
         )
-        val result = axiosPost<FileListResponse, SearchRequest>("/account", request) {
+        val result = axiosPost<FileListResponse, SearchRequest>("$location/account", request) {
             parameter("include_thumbnails", "false")
         }
         return result
@@ -51,33 +66,33 @@ object ApiClient {
     }
 
     suspend fun deleteFile(link: String) {
-        return axiosDelete("/${link}")
+        return axiosDelete("$location/${link}")
     }
 
     suspend fun renameFile(link: String, newName: String) {
         val body = RenameFileRequest(newName)
-        return axiosPost("/${link}", body)
+        return axiosPost("$location/${link}", body)
     }
 
     suspend fun getAccountInfo(): AccountInfoV2 {
-        return axiosGet("/account-info")
+        return axiosGet("$location/account-info")
     }
 
     suspend fun getApiKey(): ApiKeyResponse {
-        return axiosGet("/api-key")
+        return axiosGet("$location/api-key")
     }
 
     suspend fun generateApiKey(): ApiKeyResponse {
-        return axiosPost("/generate-api-key")
+        return axiosPost("$location/generate-api-key")
     }
 
     suspend fun getStatistics(): StatisticsResponse {
-        return axiosGet("/statistics")
+        return axiosGet("$location/statistics")
     }
 
     suspend fun authenticate(username: String, password: String, remember: Boolean): LoginResponseV2 {
         val body = LoginRequest(username, password, remember)
-        return axiosPost("/v2/auth", body)
+        return axiosPost("$location/v2/auth", body)
     }
 
     suspend fun createUser(username: String, email: String, password: String) {
@@ -86,18 +101,18 @@ object ApiClient {
             email = email,
             password = password
         )
-        return axiosPost("/users", body)
+        return axiosPost("$location/users", body)
     }
 
     suspend fun getContact(): ContactResponse {
-        return axiosGet("/contact")
+        return axiosGet("$location/contact")
     }
 
-    suspend fun logout() = axiosPost<Unit>("/logout")
+    suspend fun logout() = axiosPost<Unit>("$location/logout")
 
     suspend fun changePassword(existingPassword: String, newPassword: String) {
         val body = ChangePasswordRequest(existingPassword, newPassword)
-        return axiosPost("/change-password", body)
+        return axiosPost("$location/change-password", body)
     }
 
     suspend fun uploadFile(file: File, onProgress: (Double) -> Unit): FileResponse {
@@ -112,10 +127,11 @@ object ApiClient {
             xmlRequest.onerror = {
                 continuation.resumeWithException(RuntimeException("Unknown error while fetching data"))
             }
+            xmlRequest.withCredentials = true
             xmlRequest.onreadystatechange = {
                 if (xmlRequest.readyState == 4.toShort()) {
                     when (xmlRequest.status) {
-                        200.toShort() -> {
+                        200 -> {
                             try {
                                 val jsonResponse = xmlRequest.responseText
                                 continuation.resume(Json.decodeFromString(jsonResponse))
@@ -124,20 +140,20 @@ object ApiClient {
                             }
                         }
 
-                        401.toShort() -> continuation.resumeWithException(UnauthorizedException)
+                        401 -> continuation.resumeWithException(UnauthorizedException)
                         else -> continuation.resumeWithException(RuntimeException("Unknown error when fetching data"))
                     }
                     xmlRequest.response
                 }
             }
-            xmlRequest.open("POST", "/upload-cookie")
+            xmlRequest.open("POST", "$location/upload-cookie")
             xmlRequest.send(formData)
         }
     }
 
     suspend fun getSharedFileInformation(link: String): ShareFileResponse? {
         return try {
-            axiosGet("/share/${link}")
+            axiosGet("$location/share/${link}")
         } catch (e: NotFoundException) {
             null
         }
