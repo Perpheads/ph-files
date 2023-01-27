@@ -179,9 +179,6 @@ val Page = fc<PageProps> { props ->
                     Box {
                         attrs.sx {
                             flexGrow = number(1.0)
-                            theme.breakpoints.only(Breakpoint.xs).invoke {
-                                display = "none".asDynamic() as? Display
-                            }
                             theme.breakpoints.only(Breakpoint.sm).invoke {
                                 display = Display.flex
                             }

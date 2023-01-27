@@ -3,13 +3,11 @@ package com.perpheads.files.components
 import com.perpheads.files.ApiClient
 import com.perpheads.files.data.FileResponse
 import com.perpheads.files.data.validateFilename
-import csstype.AlignItems
-import csstype.Display
-import csstype.FlexDirection
-import csstype.px
+import csstype.*
 import mui.icons.material.DeleteOutline
 import mui.icons.material.Edit
 import mui.material.*
+import mui.material.Size
 import mui.system.sx
 import react.*
 import web.html.HTMLInputElement
@@ -90,6 +88,9 @@ val FileComponent = fc<FileComponentProps>("FileComponent") { props ->
                         attrs.href = ApiClient.getLocalLink("/${props.file.link}")
                         attrs.target = WindowTarget._blank
                         attrs.underline = LinkUnderline.none
+                        attrs.sx {
+                            overflowWrap = OverflowWrap.anywhere
+                        }
                         +props.file.fileName
                     }
                 }

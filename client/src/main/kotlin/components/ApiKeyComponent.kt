@@ -79,7 +79,13 @@ val ApiKeyComponent = fc<ApiKeyProps>("ApiKeyComponent") { props ->
                     this.readOnly = true
                 }.asDynamic() as? InputBaseComponentProps
                 label = ReactNode("API Key")
+                onClick = {
+                    it.stopPropagation()
+                    it.preventDefault()
+                }
                 onFocus = {
+                    it.stopPropagation()
+                    it.preventDefault()
                     window.navigator.clipboard.writeText(apiKey)
                     props.showAlert("API Key copied successfully", AlertColor.info)
                 }

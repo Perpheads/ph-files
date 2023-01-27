@@ -73,6 +73,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
     val username = account?.username
 
     val theme = useTheme<Theme>()
+    val tinyScreen = useMediaQuery(theme.breakpoints.only(Breakpoint.xs))
     val smallScreen = useMediaQuery(theme.breakpoints.down(Breakpoint.md))
     val shouldShowDetails = useMediaQuery(theme.breakpoints.up(Breakpoint.sm))
 
@@ -219,11 +220,12 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
 
         Pagination {
             attrs {
-                count = paginationData.pageEnd
+                size = if (smallScreen) Size.small else Size.medium
+                count = paginationData.totalPages
                 defaultPage = paginationData.currentPage
+                showFirstButton = !tinyScreen
+                showLastButton = !tinyScreen
                 this.page = paginationData.currentPage
-                showFirstButton = true
-                showLastButton = true
                 onChange = { _, num ->
                     changeUrl(num.toInt(), search)
                 }
