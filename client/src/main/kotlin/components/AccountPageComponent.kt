@@ -265,6 +265,7 @@ val AccountPageComponent = fc<AccountPageProps>("AccountPageComponent") {
             attrs.id = "file-input"
             attrs.onChange = { event ->
                 (event.target as HTMLInputElement).files?.let { inputFiles ->
+                    if (inputFiles.length == 0) return@let
                     doUploadFiles(inputFiles.asList())
                 }
             }

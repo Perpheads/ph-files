@@ -11,14 +11,22 @@ import js.core.jso
 import kotlinx.browser.window
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
+import kotlinx.css.display
+import kotlinx.html.id
 import mui.icons.material.Share
 import mui.material.*
 import mui.material.styles.TypographyVariant
 import mui.system.sx
 import org.w3c.dom.BeforeUnloadEvent
 import react.*
+import react.dom.onChange
 import react.router.useNavigate
+import styled.css
+import styled.styledInput
+import web.dom.document
 import web.file.File
+import web.html.HTMLInputElement
+import web.html.InputType
 
 private val preventPageClose: (BeforeUnloadEvent) -> String? = {
     it.preventDefault()
@@ -85,7 +93,24 @@ val ShareComponent = fc<Props>("ShareComponent") {
         val currentLink = createdLink
         val currentProgress = downloadProgress
         val file = droppedFile
+
+
         if (currentLink == null) {
+            styledInput {
+                css {
+                    display = kotlinx.css.Display.none
+                }
+                attrs.type = kotlinx.html.InputType.file
+                attrs.id = "file-input"
+                attrs.onChange = { event ->
+                    (event.target as HTMLInputElement).files?.let { inputFiles ->
+                        if (dropEnabled && inputFiles.length > 0) {
+                            droppedFile = inputFiles[0]
+                        }
+                    }
+                }
+            }
+
             Paper {
                 attrs.sx {
                     width = 100.pct
@@ -94,8 +119,17 @@ val ShareComponent = fc<Props>("ShareComponent") {
                     alignItems = AlignItems.center
                     justifyContent = JustifyContent.center
                     flexDirection = FlexDirection.row
+                    cursor = Cursor.pointer
                 }
                 attrs.elevation = if (dropZoneHovered) 8 else 2
+
+                attrs.onClick = {
+                    it.stopPropagation()
+                    it.preventDefault()
+                    document.getElementById("file-input")?.let { elem ->
+                        (elem as HTMLInputElement).click()
+                    }
+                }
 
                 attrs.onDragLeave = {
                     dropZoneHovered = false
@@ -113,6 +147,9 @@ val ShareComponent = fc<Props>("ShareComponent") {
                 }
 
                 Typography {
+                    attrs.sx {
+                        userSelect = "none".unsafeCast<UserSelect>()
+                    }
                     attrs.variant = TypographyVariant.h5
                     +"Drop File Here"
                 }
