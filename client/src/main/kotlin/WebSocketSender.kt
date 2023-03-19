@@ -33,7 +33,7 @@ class WebSocketSender(private val path: String, private val file: File, private 
         onProgress(0)
         sendJob = scope.launch {
             var sent = 0.0
-            while (sent < file.size.toDouble()) {
+            while (sent < file.size) {
                 tokenChannel.receive()
                 val end = (sent + chunkSize).coerceAtMost(file.size)
                 socket.send(file.slice(sent, end))

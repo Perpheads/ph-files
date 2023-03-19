@@ -108,7 +108,7 @@ fun Route.shareRoutes() {
                 return@webSocket
             }
             val announceMessage = Json.decodeFromString<AnnounceMessage>(announceFrame.data.decodeToString())
-            if (!validateFilename(announceMessage.fileName) || announceMessage.fileName.length !in 2..50) {
+            if (!validateFilename(announceMessage.fileName) || announceMessage.fileName.length !in 2..150) {
                 logger.warn("User $userId attempted share session with invalid filename: ${announceMessage.fileName}")
                 val errorMessage =
                     Json.encodeToString<ShareWebSocketMessage>(ErrorMessage("Invalid filename"))

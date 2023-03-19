@@ -13,7 +13,6 @@ import mui.material.styles.TypographyVariant
 import mui.material.styles.useTheme
 import mui.system.sx
 import react.*
-import react.dom.html.ButtonType
 import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.form
 import react.dom.html.ReactHTML.h1
@@ -21,6 +20,7 @@ import react.dom.html.ReactHTML.main
 import react.dom.onChange
 import react.router.Navigate
 import react.router.useNavigate
+import web.html.ButtonType
 import web.html.HTMLInputElement
 import web.html.InputType
 

@@ -5,7 +5,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-val kotlinWrappersVersion = "1.0.0-pre.479"
+val kotlinWrappersVersion = "1.0.0-pre.515"
 
 kotlin {
     js(IR) {

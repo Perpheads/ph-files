@@ -12,6 +12,7 @@ import react.*
 import react.dom.html.ReactHTML
 import react.dom.onChange
 import react.router.useNavigate
+import web.html.ButtonType
 
 external interface CreateAccountProps : Props {
     var showAlert: (String, AlertColor) -> Unit
@@ -105,7 +106,7 @@ val CreateAccountComponent = fc<CreateAccountProps>("CreateAccountComponent") {p
 
             Button {
                 attrs {
-                    type = react.dom.html.ButtonType.submit
+                    type = ButtonType.submit
                     fullWidth = true
                     variant = ButtonVariant.contained
                     sx {

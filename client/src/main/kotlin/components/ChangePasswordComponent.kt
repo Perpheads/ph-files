@@ -9,12 +9,12 @@ import mui.material.*
 import mui.system.sx
 import react.Props
 import react.ReactNode
-import react.dom.html.ButtonType
 import react.dom.html.ReactHTML
 import react.dom.onChange
 import react.fc
 import react.router.useNavigate
 import react.useState
+import web.html.ButtonType
 
 val ChangePasswordComponent = fc<Props>("ChangePasswordComponent") {
     val navigate = useNavigate()

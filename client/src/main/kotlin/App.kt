@@ -12,11 +12,8 @@ import mui.material.styles.ThemeProvider
 import mui.material.styles.createTheme
 import react.*
 import react.dom.client.createRoot
-import react.router.NavigateFunction
-import react.router.Route
-import react.router.Routes
+import react.router.*
 import react.router.dom.HashRouter
-import react.router.useNavigate
 import web.dom.document
 import web.window.window
 
@@ -63,7 +60,7 @@ fun useScope(): CoroutineScope {
 }
 
 fun useAccount(required: Boolean = true): Pair<AccountInfoV2?, StateSetter<AccountInfoV2?>> {
-    val contextData = useContext(AccountContext)
+    val contextData = useContext(AccountContext)!!
     val navigate = useNavigate()
 
     useEffectOnce {
@@ -90,6 +87,13 @@ fun useAccount(required: Boolean = true): Pair<AccountInfoV2?, StateSetter<Accou
     return contextData.account to contextData.setAccount
 }
 
+private fun ChildrenBuilder.route(builder: (PathRouteProps).() -> Unit) {
+    Route {
+        @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
+        builder(this as PathRouteProps)
+    }
+}
+
 val App = VFC {
     val (account, setAccount) = useState<AccountInfoV2?>(null)
 
@@ -112,39 +116,39 @@ val App = VFC {
             theme = usedTheme
             HashRouter {
                 Routes {
-                    Route {
+                    route {
                         path = "/account"
                         element = createElement(AccountPageComponent)
                     }
-                    Route {
+                    route {
                         path = "/change-password"
                         element = createElement(ChangePasswordComponent)
                     }
-                    Route {
+                    route {
                         path = "/api-key"
                         element = createElement(ApiKeyComponent)
                     }
-                    Route {
+                    route {
                         path = "/share"
                         element = createElement(ShareComponent)
                     }
-                    Route {
+                    route {
                         path = "/create-account"
                         element = createElement(CreateAccountComponent)
                     }
-                    Route {
+                    route {
                         path = "/share/:token"
                         element = createElement(ShareDownloadComponent)
                     }
-                    Route {
+                    route {
                         path = "/contact"
                         element = createElement(ContactComponent)
                     }
-                    Route {
+                    route {
                         path = "/statistics"
                         element = createElement(StatisticsPage)
                     }
-                    Route {
+                    route {
                         path = "/"
                         element = createElement(LoginPageComponent)
                     }
